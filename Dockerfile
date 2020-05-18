@@ -11,9 +11,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -v -mod=vendor -o app
 
 #FROM alpine:3.8
 FROM scratch
-
 # We need ca certs installed otherwise we can't get https urls
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 WORKDIR /root/
 
