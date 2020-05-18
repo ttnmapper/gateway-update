@@ -105,8 +105,8 @@ type Antenna struct {
 	ID uint
 
 	// TTN gateway ID along with the Antenna index identifies a unique coverage area.
-	GatewayId    string `gorm:"type:varchar(36);UNIQUE_INDEX:gtw_id_antenna"`
 	NetworkId    string `gorm:"type:varchar(36);UNIQUE_INDEX:gtw_id_antenna"`
+	GatewayId    string `gorm:"type:varchar(36);UNIQUE_INDEX:gtw_id_antenna"`
 	AntennaIndex uint8  `gorm:"UNIQUE_INDEX:gtw_id_antenna"`
 
 	// For now we do not set antenna locations, but add it here for future use
@@ -120,8 +120,8 @@ type Antenna struct {
 type Gateway struct {
 	ID uint
 
-	GatewayId   string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
 	NetworkId   string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
+	GatewayId   string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
 	GatewayEui  *string
 	Description *string
 
@@ -140,8 +140,8 @@ type Gateway struct {
 
 type GatewayLocation struct {
 	ID        uint
-	GatewayId string `gorm:"type:varchar(36);INDEX=idx_gtw_id_install"`
 	NetworkId string `gorm:"type:varchar(36);INDEX=idx_gtw_id_install"`
+	GatewayId string `gorm:"type:varchar(36);INDEX=idx_gtw_id_install"`
 
 	InstalledAt time.Time `gorm:"INDEX=idx_gtw_id_install"`
 	Latitude    float64
@@ -151,8 +151,8 @@ type GatewayLocation struct {
 // To blacklist a gateway set its location to 0,0
 type GatewayLocationForce struct {
 	ID        uint
-	GatewayId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
 	NetworkId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
+	GatewayId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
 
 	Latitude  float64
 	Longitude float64
@@ -170,13 +170,13 @@ type DeviceIndexer struct {
 }
 
 type GatewayIndexer struct {
-	GatewayId string
 	NetworkId string
+	GatewayId string
 }
 
 type AntennaIndexer struct {
-	GatewayId    string
 	NetworkId    string
+	GatewayId    string
 	AntennaIndex uint8
 }
 
