@@ -56,4 +56,7 @@ type TtnMapperGateway struct {
 	// The source can be: gps, config, registry, ip_geolocation or unknown (unknown may be left out)
 	// See proto definition for more info
 	LocationSource string `json:"location_source,omitempty"`
+
+	// Some sources of statuses provide the description
+	Description string `json:"description,omitempty"`
 }
