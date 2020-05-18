@@ -169,6 +169,11 @@ type DeviceIndexer struct {
 	AppId string
 }
 
+type GatewayIndexer struct {
+	GatewayId string
+	NetworkId string
+}
+
 type AntennaIndexer struct {
 	GatewayId    string
 	NetworkId    string

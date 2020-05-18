@@ -25,6 +25,10 @@ func processRawPackets(thread int) {
 		for _, gateway := range message.Gateways {
 			log.Printf("  [%d][p] Processing gateway %s", thread, gateway.GatewayId)
 			gateway.Time = message.Time
+
+			// Packet broker metadata will provide network id. For now assume TTN
+			gateway.NetorkId = "thethingsnetwork.org"
+
 			updateGateway(gateway)
 		}
 	}
@@ -39,6 +43,9 @@ func processNocGateway(gatewayId string, gateway types.NocGateway) {
 	//ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
 	//ttnMapperGateway.Description = gateway.Description
 
+	// Assume NOC lists only TTN gateways. Need to check this as a private V2 network can also have a NOC
+	ttnMapperGateway.NetorkId = "thethingsnetwork.org"
+
 	updateGateway(ttnMapperGateway)
 }
 
@@ -50,6 +57,9 @@ func processWebGateway(gateway types.WebGateway) {
 	ttnMapperGateway.Longitude = gateway.Location.Longitude
 	ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
 	ttnMapperGateway.Description = gateway.Description
+
+	// Website lists only TTN gateways
+	ttnMapperGateway.NetorkId = "thethingsnetwork.org"
 
 	updateGateway(ttnMapperGateway)
 }
@@ -148,25 +158,26 @@ Takes a TTN Mapper Gateway and search for it in the database and return the data
 */
 func getGatewayDbId(gateway types.TtnMapperGateway) (uint, error) {
 
-	i, ok := gatewayDbCache.Load(gateway.GatewayId)
+	gatewayIndexer := types.GatewayIndexer{GatewayId: gateway.GatewayId, NetworkId: gateway.NetorkId}
+	i, ok := gatewayDbCache.Load(gatewayIndexer)
 	if ok {
 		dbId := i.(uint)
 		return dbId, nil
 
 	} else {
-		gatewayDb := types.Gateway{GatewayId: gateway.GatewayId}
+		gatewayDb := types.Gateway{GatewayId: gateway.GatewayId, NetworkId: gateway.NetorkId}
 		err := db.FirstOrCreate(&gatewayDb, &gatewayDb).Error
 		if err != nil {
 			return 0, err
 		}
 
-		gatewayDbCache.Store(gateway.GatewayId, gatewayDb.ID)
+		gatewayDbCache.Store(gatewayIndexer, gatewayDb.ID)
 		return gatewayDb.ID, nil
 	}
 }
 
 func isCoordinatesForced(gateway types.TtnMapperGateway) (bool, types.GatewayLocationForce) {
-	forcedCoords := types.GatewayLocationForce{GatewayId: gateway.GatewayId}
+	forcedCoords := types.GatewayLocationForce{GatewayId: gateway.GatewayId, NetworkId: gateway.NetorkId}
 	db.First(&forcedCoords, &forcedCoords)
 	if forcedCoords.ID != 0 {
 		return true, forcedCoords
@@ -211,7 +222,7 @@ func coordinatesValid(gateway types.TtnMapperGateway) bool {
 }
 
 func getGatewayLastLocation(gateway types.TtnMapperGateway) types.GatewayLocation {
-	gatewayLocation := types.GatewayLocation{GatewayId: gateway.GatewayId}
+	gatewayLocation := types.GatewayLocation{GatewayId: gateway.GatewayId, NetworkId: gateway.NetorkId}
 	db.Order("installed_at DESC").First(&gatewayLocation, &gatewayLocation)
 
 	return gatewayLocation
@@ -220,6 +231,7 @@ func getGatewayLastLocation(gateway types.TtnMapperGateway) types.GatewayLocatio
 func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt time.Time) {
 	newLocation := types.GatewayLocation{
 		GatewayId:   gateway.GatewayId,
+		NetworkId:   gateway.NetorkId,
 		InstalledAt: installedAt,
 		Latitude:    gateway.Latitude,
 		Longitude:   gateway.Longitude,
