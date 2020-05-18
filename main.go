@@ -66,7 +66,7 @@ var myConfiguration = Configuration{
 
 	PrometheusPort: "9100",
 
-	FetchNoc:     false,
+	FetchNoc:     true,
 	NocUrl:       "http://noc.thethingsnetwork.org:8085/api/v2/gateways",
 	NocBasicAuth: false,
 	NocUsername:  "",
@@ -74,7 +74,7 @@ var myConfiguration = Configuration{
 	FetchWeb:     true,
 	WebUrl:       "https://www.thethingsnetwork.org/gateway-data/",
 
-	StatusFetchInterval: 10, //1200,
+	StatusFetchInterval: 60, //1200,
 }
 
 var (
