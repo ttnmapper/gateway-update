@@ -35,8 +35,8 @@ type TtnMapperUplinkMessage struct {
 }
 
 type TtnMapperGateway struct {
-	GatewayId                   string `json:"gtw_id"`
 	NetworkId                   string
+	GatewayId                   string  `json:"gtw_id"`
 	GatewayEui                  string  `json:"gtw_eui,omitempty"`
 	AntennaIndex                uint8   `json:"antenna_index"`
 	Time                        int64   `json:"time,omitempty"`
