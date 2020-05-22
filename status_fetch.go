@@ -137,9 +137,7 @@ func fetchNocStatuses() {
 	}
 
 	for gatewayId, gateway := range nocData.Statuses {
-		log.Print(gatewayId + " : ")
-		log.Println(gateway.Timestamp)
-
+		log.Print(gatewayId+": ", gateway.Timestamp)
 		processNocGateway(gatewayId, gateway)
 	}
 
@@ -177,9 +175,7 @@ func fetchWebStatuses() {
 	}
 
 	for gatewayId, gateway := range webData {
-		log.Print(gatewayId + " : ")
-		log.Println(gateway.LastSeen)
-
+		log.Print(gatewayId+": ", gateway.LastSeen)
 		processWebGateway(*gateway)
 	}
 

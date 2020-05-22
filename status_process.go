@@ -37,6 +37,10 @@ func processRawPackets(thread int) {
 func processNocGateway(gatewayId string, gateway types.NocGateway) {
 	ttnMapperGateway := types.TtnMapperGateway{}
 
+	if gateway.Timestamp.IsZero() {
+		return
+	}
+
 	// Assume NOC lists only TTN gateways. Need to check this as a private V2 network can also have a NOC
 	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
 
@@ -61,7 +65,7 @@ func processWebGateway(gateway types.WebGateway) {
 	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
 
 	ttnMapperGateway.GatewayId = gateway.ID
-	ttnMapperGateway.Time = gateway.LastSeen.Unix()
+	ttnMapperGateway.Time = gateway.LastSeen.UnixNano()
 	ttnMapperGateway.Latitude = gateway.Location.Latitude
 	ttnMapperGateway.Longitude = gateway.Location.Longitude
 	ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
