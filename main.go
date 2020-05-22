@@ -74,7 +74,7 @@ var myConfiguration = Configuration{
 	FetchWeb:     true,
 	WebUrl:       "https://www.thethingsnetwork.org/gateway-data/",
 
-	StatusFetchInterval: 60, //1200,
+	StatusFetchInterval: 1200,
 }
 
 var (
@@ -99,11 +99,9 @@ var (
 )
 
 var (
-	gatewayDbCache sync.Map
-
+	gatewayDbCache    sync.Map
 	rawPacketsChannel = make(chan amqp.Delivery)
-
-	db *gorm.DB
+	db                *gorm.DB
 )
 
 func main() {
@@ -129,9 +127,10 @@ func main() {
 		return defaultTableName
 	}
 
-	db, err := gorm.Open("postgres", "host="+myConfiguration.PostgresHost+" port="+myConfiguration.PostgresPort+" user="+myConfiguration.PostgresUser+" dbname="+myConfiguration.PostgresDatabase+" password="+myConfiguration.PostgresPassword+"")
-	if err != nil {
-		panic(err.Error())
+	var dbErr error
+	db, dbErr = gorm.Open("postgres", "host="+myConfiguration.PostgresHost+" port="+myConfiguration.PostgresPort+" user="+myConfiguration.PostgresUser+" dbname="+myConfiguration.PostgresDatabase+" password="+myConfiguration.PostgresPassword+"")
+	if dbErr != nil {
+		panic(dbErr.Error())
 	}
 	defer db.Close()
 

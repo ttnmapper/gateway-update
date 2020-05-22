@@ -151,8 +151,8 @@ type GatewayLocation struct {
 // To blacklist a gateway set its location to 0,0
 type GatewayLocationForce struct {
 	ID        uint
-	NetworkId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
-	GatewayId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
+	NetworkId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id_force"`
+	GatewayId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id_force"`
 
 	Latitude  float64
 	Longitude float64

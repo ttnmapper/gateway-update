@@ -41,7 +41,7 @@ func processNocGateway(gatewayId string, gateway types.NocGateway) {
 	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
 
 	ttnMapperGateway.GatewayId = gatewayId
-	ttnMapperGateway.Time = gateway.Timestamp.Unix()
+	ttnMapperGateway.Time = gateway.Timestamp.UnixNano()
 	ttnMapperGateway.Latitude = gateway.Location.Latitude
 	ttnMapperGateway.Longitude = gateway.Location.Longitude
 	//ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
@@ -52,6 +52,10 @@ func processNocGateway(gatewayId string, gateway types.NocGateway) {
 
 func processWebGateway(gateway types.WebGateway) {
 	ttnMapperGateway := types.TtnMapperGateway{}
+
+	if gateway.LastSeen == nil {
+		return
+	}
 
 	// Website lists only TTN gateways
 	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
@@ -83,6 +87,13 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	gatewayDbId, err := getGatewayDbId(gateway)
 	if err != nil {
 		failOnError(err, "Can't find gateway ID")
+	}
+
+	// Check if our lastHeard time is newer that the lastHeard in the database.
+	// If it's not we are using old cached data which should be ignored
+	if !isLastHeardNewer(gatewayDbId, lastHeard) {
+		log.Println("Status record stale")
+		return
 	}
 
 	// Update last seen in Gateways table
@@ -189,16 +200,17 @@ func isCoordinatesForced(gateway types.TtnMapperGateway) (bool, types.GatewayLoc
 }
 
 func coordinatesValid(gateway types.TtnMapperGateway) bool {
-	if math.Abs(gateway.Latitude) < 1 {
-		return false
-	}
-	if math.Abs(gateway.Longitude) < 1 {
+
+	if math.Abs(gateway.Latitude) < 1 && math.Abs(gateway.Longitude) < 1 {
+		log.Println("      Null island")
 		return false
 	}
 	if math.Abs(gateway.Latitude) > 90 {
+		log.Println("      Latitude out of bounds:", gateway.Latitude)
 		return false
 	}
 	if math.Abs(gateway.Longitude) > 180 {
+		log.Println("      Longitude out of bounds:", gateway.Longitude)
 		return false
 	}
 
@@ -261,4 +273,11 @@ func updateGatewayLocation(gatewayDbId uint, lastHeard time.Time, gateway types.
 	}
 
 	db.Model(&pgGateway).Update(pgGateway)
+}
+
+// Returns true if lastHeard is after the lastHeard currently in the database
+func isLastHeardNewer(gatewayDbId uint, lastHeard time.Time) bool {
+	gatewayDb := types.Gateway{ID: gatewayDbId}
+	db.First(&gatewayDb, gatewayDbId)
+	return lastHeard.After(gatewayDb.LastHeard)
 }
