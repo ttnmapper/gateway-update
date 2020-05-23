@@ -99,9 +99,10 @@ var (
 )
 
 var (
-	gatewayDbCache    sync.Map
-	rawPacketsChannel = make(chan amqp.Delivery)
-	db                *gorm.DB
+	gatewayDbIdCache      sync.Map
+	gatewayLastHeardCache sync.Map
+	rawPacketsChannel     = make(chan amqp.Delivery)
+	db                    *gorm.DB
 )
 
 func main() {

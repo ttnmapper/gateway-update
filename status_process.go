@@ -93,7 +93,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 		failOnError(err, "Can't find gateway ID")
 	}
 
-	// Check if our lastHeard time is newer that the lastHeard in the database.
+	// Check if our lastHeard time is newer that the lastHeard in the database and/or memory cache.
 	// If it's not we are using old cached data which should be ignored
 	if !isLastHeardNewer(gatewayDbId, lastHeard) {
 		log.Println("Status record stale")
@@ -103,6 +103,8 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	// Update last seen in Gateways table
 	pgGateway := types.Gateway{ID: gatewayDbId, LastHeard: lastHeard}
 	db.Model(&pgGateway).Update(pgGateway)
+	// Also update the last seen in our memory cache
+	gatewayLastHeardCache.Store(gatewayDbId, lastHeard)
 
 	// Update EUI if it is set
 	if gateway.GatewayEui != "" {
@@ -176,7 +178,7 @@ Takes a TTN Mapper Gateway and search for it in the database and return the data
 func getGatewayDbId(gateway types.TtnMapperGateway) (uint, error) {
 
 	gatewayIndexer := types.GatewayIndexer{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
-	i, ok := gatewayDbCache.Load(gatewayIndexer)
+	i, ok := gatewayDbIdCache.Load(gatewayIndexer)
 	if ok {
 		dbId := i.(uint)
 		return dbId, nil
@@ -188,7 +190,7 @@ func getGatewayDbId(gateway types.TtnMapperGateway) (uint, error) {
 			return 0, err
 		}
 
-		gatewayDbCache.Store(gatewayIndexer, gatewayDb.ID)
+		gatewayDbIdCache.Store(gatewayIndexer, gatewayDb.ID)
 		return gatewayDb.ID, nil
 	}
 }
@@ -281,7 +283,12 @@ func updateGatewayLocation(gatewayDbId uint, lastHeard time.Time, gateway types.
 
 // Returns true if lastHeard is after the lastHeard currently in the database
 func isLastHeardNewer(gatewayDbId uint, lastHeard time.Time) bool {
-	gatewayDb := types.Gateway{ID: gatewayDbId}
-	db.First(&gatewayDb, gatewayDbId)
-	return lastHeard.After(gatewayDb.LastHeard)
+	i, ok := gatewayLastHeardCache.Load(gatewayDbId)
+	if ok {
+		return lastHeard.After(i.(time.Time))
+	} else {
+		gatewayDb := types.Gateway{ID: gatewayDbId}
+		db.First(&gatewayDb, gatewayDbId)
+		return lastHeard.After(gatewayDb.LastHeard)
+	}
 }

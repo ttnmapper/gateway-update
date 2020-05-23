@@ -136,8 +136,11 @@ func fetchNocStatuses() {
 		return
 	}
 
+	count := 0
+	total := len(nocData.Statuses)
 	for gatewayId, gateway := range nocData.Statuses {
-		log.Print("NOC", gatewayId+": ", gateway.Timestamp)
+		count++
+		log.Print("NOC ", count, "/", total, "\t", gatewayId+"\t", gateway.Timestamp)
 		processNocGateway(gatewayId, gateway)
 	}
 
@@ -174,8 +177,11 @@ func fetchWebStatuses() {
 		return
 	}
 
+	count := 0
+	total := len(webData)
 	for gatewayId, gateway := range webData {
-		log.Print("WEB", gatewayId+": ", gateway.LastSeen)
+		count++
+		log.Print("WEB ", count, "/", total, "\t", gatewayId+"\t", gateway.LastSeen)
 		processWebGateway(*gateway)
 	}
 
