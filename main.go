@@ -149,12 +149,6 @@ func main() {
 		&types.GatewayLocationForce{},
 	)
 
-	// Start threads to handle Postgres inserts
-	log.Println("Starting database insert threads")
-	for i := 0; i < myConfiguration.PostgresInsertThreads; i++ {
-		go processRawPackets(i + 1)
-	}
-
 	// Start amqp listener on this thread - blocking function
 	if myConfiguration.FetchAmqp {
 		log.Println("Starting AMQP thread")

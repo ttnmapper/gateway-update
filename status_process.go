@@ -9,21 +9,21 @@ import (
 	"ttnmapper-gateway-update/types"
 )
 
-func processRawPackets(thread int) {
+func processRawPackets() {
 	// Wait for a message and insert it into Postgres
 	for d := range rawPacketsChannel {
-		log.Printf(" [%d][p] Processing raw packet", thread)
 
 		// The message form amqp is a json string. Unmarshal to ttnmapper uplink struct
 		var message types.TtnMapperUplinkMessage
 		if err := json.Unmarshal(d.Body, &message); err != nil {
-			log.Print("[%d][p] "+err.Error(), thread)
+			log.Print("AMQP " + err.Error())
 			continue
 		}
 
 		// Iterate gateways. We store it flat in the database
 		for _, gateway := range message.Gateways {
-			log.Printf("  [%d][p] Processing gateway %s", thread, gateway.GatewayId)
+			updateTime := time.Unix(0, message.Time)
+			log.Print("AMQP ", "", "\t", gateway.GatewayId+"\t", updateTime)
 			gateway.Time = message.Time
 
 			// Packet broker metadata will provide network id. For now assume TTN

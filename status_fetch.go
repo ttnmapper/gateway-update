@@ -32,7 +32,7 @@ func subscribeToRabbitRaw() {
 	q, err := ch.QueueDeclare(
 		myConfiguration.AmqpQueueRawPackets, // name
 		false,                               // durable
-		true,                                // delete when unused
+		false,                               // delete when unused
 		false,                               // exclusive
 		false,                               // no-wait
 		nil,                                 // arguments
@@ -72,6 +72,12 @@ func subscribeToRabbitRaw() {
 			rawPacketsChannel <- d
 		}
 	}()
+
+	go func() {
+		processRawPackets()
+	}()
+
+	log.Println("AMQP started")
 }
 
 func startPeriodicFetchers() {
