@@ -34,14 +34,15 @@ type Configuration struct {
 
 	PrometheusPort string `env:"PROMETHEUS_PORT"`
 
-	FetchNoc     bool   `env:"FETCH_NOC"` // Should we periodically fetch gateway statuses from the NOC (TTNv2)
+	FetchAmqp    bool   `env:"FETCH_AMQP"` // Should we subscribe to the amqp queue to process live data
+	FetchNoc     bool   `env:"FETCH_NOC"`  // Should we periodically fetch gateway statuses from the NOC (TTNv2)
 	NocUrl       string `env:"NOC_URL"`
 	NocBasicAuth bool   `env:"NOC_BASIC_AUTH"`
 	NocUsername  string `env:"NOC_USERNAME"`
 	NocPassword  string `env:"NOC_PASSWORD"`
 	FetchWeb     bool   `env:"FETCH_WEB"` // Should we periodivally fetch gateway statuses from the TTN website (TTNv2 and v3)
 	WebUrl       string `env:"WEB_URL"`
-	// TODO: Fetch gateway statuses from V3 API
+	// TODO: Fetch gateway statuses from V3 API or Packet Broker API
 
 	StatusFetchInterval int `env:"FETCH_INTERVAL"` // How often in seconds should we fetch gateway statuses from the NOC and the TTN Website
 }
@@ -66,6 +67,7 @@ var myConfiguration = Configuration{
 
 	PrometheusPort: "9100",
 
+	FetchAmqp:    true,
 	FetchNoc:     true,
 	NocUrl:       "http://noc.thethingsnetwork.org:8085/api/v2/gateways",
 	NocBasicAuth: false,
@@ -154,8 +156,10 @@ func main() {
 	}
 
 	// Start amqp listener on this thread - blocking function
-	//log.Println("Starting AMQP thread")
-	//subscribeToRabbitRaw()
+	if myConfiguration.FetchAmqp {
+		log.Println("Starting AMQP thread")
+		subscribeToRabbitRaw()
+	}
 
 	// Periodic status fetchers
 	startPeriodicFetchers()
