@@ -45,6 +45,8 @@ func TestUpdateGateway(t *testing.T) {
 	//ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
 	//ttnMapperGateway.Description = gateway.Description
 
-	updateGateway(ttnMapperGateway)
-	updateGateway(ttnMapperGateway)
+	for i := 1; i <= 10; i++ {
+		ttnMapperGateway.Time = time.Now().UnixNano()
+		updateGateway(ttnMapperGateway)
+	}
 }
