@@ -96,7 +96,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	// Check if our lastHeard time is newer that the lastHeard in the database and/or memory cache.
 	// If it's not we are using old cached data which should be ignored
 	if !isLastHeardNewer(gatewayDbId, lastHeard) {
-		log.Println("Status record stale")
+		log.Println("\tStatus record stale")
 		return
 	}
 
@@ -120,14 +120,15 @@ func updateGateway(gateway types.TtnMapperGateway) {
 
 	// Check if the coordinates should be forced to a specific location
 	if isForced, forcedCoordinates := isCoordinatesForced(gateway); isForced == true {
-		log.Println("    Gateway coordinates forced")
+		log.Println("\tGateway coordinates forced")
 		gateway.Latitude = forcedCoordinates.Latitude
 		gateway.Longitude = forcedCoordinates.Longitude
 	}
 
 	// Check if the provided coordinates are valid
-	if !coordinatesValid(gateway) {
-		log.Println("    Gateway coordinates invalid. Forcing to 0,0.")
+	if valid, reason := coordinatesValid(gateway); !valid {
+		log.Println("\tGateway coordinates invalid. " + reason)
+		log.Println("\tForcing to 0,0.")
 		gateway.Latitude = 0
 		gateway.Longitude = 0
 	}
@@ -151,14 +152,14 @@ func updateGateway(gateway types.TtnMapperGateway) {
 		}
 	} else {
 		// A new gateway, insert new entry, and maybe publish on Twitter/Slack?
-		log.Println("    New gateway")
+		log.Println("\tNew gateway")
 		newGateways.Inc()
 		gatewayMoved = true
 	}
 
 	// Gateway moved, insert new entry
 	if gatewayMoved {
-		log.Println("    Gateway moved")
+		log.Println("\tGateway moved")
 		insertNewLocationForGateway(gateway, lastHeard)
 	}
 
@@ -205,40 +206,34 @@ func isCoordinatesForced(gateway types.TtnMapperGateway) (bool, types.GatewayLoc
 	}
 }
 
-func coordinatesValid(gateway types.TtnMapperGateway) bool {
+func coordinatesValid(gateway types.TtnMapperGateway) (valid bool, reason string) {
 
 	if math.Abs(gateway.Latitude) < 1 && math.Abs(gateway.Longitude) < 1 {
-		log.Println("      Null island")
-		return false
+		return false, "Null island"
 	}
 	if math.Abs(gateway.Latitude) > 90 {
-		log.Println("      Latitude out of bounds:", gateway.Latitude)
-		return false
+		return false, "Latitude out of bounds"
 	}
 	if math.Abs(gateway.Longitude) > 180 {
-		log.Println("      Longitude out of bounds:", gateway.Longitude)
-		return false
+		return false, "Longitude out of bounds"
 	}
 
 	// Default SCG location
 	if gateway.Latitude == 52.0 && gateway.Longitude == 6.0 {
-		log.Println("      Single channel gateway default coordinates")
-		return false
+		return false, "Single channel gateway default coordinates"
 	}
 
 	// Default Lorier LR2 location
 	if gateway.Latitude == 10.0 && gateway.Longitude == 20.0 {
-		log.Println("      Lorier LR2 default coordinates")
-		return false
+		return false, "Lorier LR2 default coordinates"
 	}
 
 	// Ukrainian hack
 	if gateway.Latitude == 50.008724 && gateway.Longitude == 36.215805 {
-		log.Println("      Ukrainian hack coordinates")
-		return false
+		return false, "Ukrainian hack coordinates"
 	}
 
-	return true
+	return true, ""
 }
 
 func getGatewayLastLocation(gateway types.TtnMapperGateway) types.GatewayLocation {
