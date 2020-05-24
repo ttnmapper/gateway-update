@@ -12,7 +12,6 @@ import (
 func processRawPackets() {
 	// Wait for a message and insert it into Postgres
 	for d := range rawPacketsChannel {
-		log.Print("AMQP ")
 
 		// The message form amqp is a json string. Unmarshal to ttnmapper uplink struct
 		var message types.TtnMapperUplinkMessage

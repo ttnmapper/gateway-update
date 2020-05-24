@@ -70,7 +70,6 @@ func subscribeToRabbitRaw() {
 		log.Println("AMQP started")
 
 		for d := range msgs {
-			log.Print("[a] Packet received")
 			rawPacketsChannel <- d
 		}
 	}()
