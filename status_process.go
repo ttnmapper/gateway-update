@@ -164,9 +164,11 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	}
 
 	// TODO: temporarily always update the coordinates in the gateways table
-	if gatewayMoved {
-		updateGatewayLocation(gatewayDbId, lastHeard, gateway)
-	}
+	//if gatewayMoved {
+	updateGatewayLocation(gatewayDbId, lastHeard, gateway)
+	//}
+
+	log.Println("\tUpdated")
 
 	// Prometheus stats
 	gatewayElapsed := time.Since(gatewayStart)
