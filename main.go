@@ -24,13 +24,12 @@ type Configuration struct {
 	AmqpQueueRawPackets         string `env:"AMQP_QUEUE"`
 	AmqpQueueGatewayStatuses    string `env:"AMQP_QUEUE"`
 
-	PostgresHost          string `env:"POSTGRES_HOST"`
-	PostgresPort          string `env:"POSTGRES_PORT"`
-	PostgresUser          string `env:"POSTGRES_USER"`
-	PostgresPassword      string `env:"POSTGRES_PASSWORD"`
-	PostgresDatabase      string `env:"POSTGRES_DATABASE"`
-	PostgresDebugLog      bool   `env:"POSTGRES_DEBUG_LOG"`
-	PostgresInsertThreads int    `env:"POSTGRES_INSERT_THREADS"`
+	PostgresHost     string `env:"POSTGRES_HOST"`
+	PostgresPort     string `env:"POSTGRES_PORT"`
+	PostgresUser     string `env:"POSTGRES_USER"`
+	PostgresPassword string `env:"POSTGRES_PASSWORD"`
+	PostgresDatabase string `env:"POSTGRES_DATABASE"`
+	PostgresDebugLog bool   `env:"POSTGRES_DEBUG_LOG"`
 
 	PrometheusPort string `env:"PROMETHEUS_PORT"`
 
@@ -57,23 +56,22 @@ var myConfiguration = Configuration{
 	AmqpQueueRawPackets:         "gateway_updates_raw",
 	AmqpQueueGatewayStatuses:    "gateway_updates_status",
 
-	PostgresHost:          "localhost",
-	PostgresPort:          "5432",
-	PostgresUser:          "username",
-	PostgresPassword:      "password",
-	PostgresDatabase:      "database",
-	PostgresDebugLog:      false,
-	PostgresInsertThreads: 1,
+	PostgresHost:     "localhost",
+	PostgresPort:     "5432",
+	PostgresUser:     "username",
+	PostgresPassword: "password",
+	PostgresDatabase: "database",
+	PostgresDebugLog: false,
 
 	PrometheusPort: "9100",
 
-	FetchAmqp:    true,
-	FetchNoc:     true,
+	FetchAmqp:    false,
+	FetchNoc:     false,
 	NocUrl:       "http://noc.thethingsnetwork.org:8085/api/v2/gateways",
 	NocBasicAuth: false,
 	NocUsername:  "",
 	NocPassword:  "",
-	FetchWeb:     true,
+	FetchWeb:     false,
 	WebUrl:       "https://www.thethingsnetwork.org/gateway-data/",
 
 	StatusFetchInterval: 1200,
@@ -101,10 +99,9 @@ var (
 )
 
 var (
-	gatewayDbIdCache      sync.Map
-	gatewayLastHeardCache sync.Map
-	rawPacketsChannel     = make(chan amqp.Delivery)
-	db                    *gorm.DB
+	gatewayDbIdCache  sync.Map
+	rawPacketsChannel = make(chan amqp.Delivery)
+	db                *gorm.DB
 )
 
 func main() {

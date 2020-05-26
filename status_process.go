@@ -80,47 +80,29 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	// Count number of gateways we processed
 	processedGateways.Inc()
 
-	gatewayMoved := false
-
 	// Last heard time
 	seconds := gateway.Time / 1000000000
 	nanos := gateway.Time % 1000000000
 	lastHeard := time.Unix(seconds, nanos)
 
 	// Find the database IDs for this gateway and it's antennas
-	gatewayDbId, err := getGatewayDbId(gateway)
+	gatewayDb, err := getGatewayDb(gateway)
 	if err != nil {
-		failOnError(err, "Can't find gateway ID")
+		failOnError(err, "Can't find gateway in DB")
 	}
 
-	// Check if our lastHeard time is newer that the lastHeard in the database and/or memory cache.
+	// Check if our lastHeard time is newer that the lastHeard in the database
 	// If it's not we are using old cached data which should be ignored
-	if !isLastHeardNewer(gatewayDbId, lastHeard) {
+	if lastHeard.Before(gatewayDb.LastHeard) {
 		log.Println("\tStatus record stale")
 		return
 	}
 
-	// Update last seen in Gateways table
-	pgGateway := types.Gateway{ID: gatewayDbId, LastHeard: lastHeard}
-	db.Model(&pgGateway).Update(pgGateway)
-	// Also update the last seen in our memory cache
-	gatewayLastHeardCache.Store(gatewayDbId, lastHeard)
-
-	// Update EUI if it is set
-	if gateway.GatewayEui != "" {
-		pgGateway := types.Gateway{ID: gatewayDbId, GatewayEui: &gateway.GatewayEui}
-		db.Model(&pgGateway).Update(pgGateway)
-	}
-
-	// Update description if it is set
-	if gateway.Description != "" {
-		pgGateway := types.Gateway{ID: gatewayDbId, Description: &gateway.Description}
-		db.Model(&pgGateway).Update(pgGateway)
-	}
-
 	// Check if the coordinates should be forced to a specific location
+	gatewayLocationForced := false
 	if isForced, forcedCoordinates := isCoordinatesForced(gateway); isForced == true {
 		log.Println("\tGateway coordinates forced")
+		gatewayLocationForced = true
 		gateway.Latitude = forcedCoordinates.Latitude
 		gateway.Longitude = forcedCoordinates.Longitude
 	}
@@ -133,40 +115,51 @@ func updateGateway(gateway types.TtnMapperGateway) {
 		gateway.Longitude = 0
 	}
 
-	// Find the last known location for this gateway
-	gatewayLastLocation := getGatewayLastLocation(gateway)
-	if err != nil {
-		failOnError(err, "Can't find last gateway location")
-	}
-
-	// Check if we found a last location
-	if gatewayLastLocation.ID != 0 {
-		oldLocation := haversine.Coord{Lat: gatewayLastLocation.Latitude, Lon: gatewayLastLocation.Longitude}
+	// Check if gateway moved. If the location is not provided, do not move, unless it's forced to 0,0
+	//gatewayMoved := false
+	if gatewayLocationForced || (gateway.Latitude != 0.0 && gateway.Longitude != 0.0) {
+		oldLocation := haversine.Coord{Lat: *gatewayDb.Latitude, Lon: *gatewayDb.Longitude}
 		newLocation := haversine.Coord{Lat: gateway.Latitude, Lon: gateway.Longitude}
 		_, km := haversine.Distance(oldLocation, newLocation)
 
 		// Did it move more than 100m
 		if km > 0.1 {
+			//gatewayMoved = true
 			movedGateways.Inc()
-			gatewayMoved = true
+			log.Println("\tGateway moved")
+			insertNewLocationForGateway(gateway, lastHeard)
 		}
-	} else {
-		// A new gateway, insert new entry, and maybe publish on Twitter/Slack?
-		log.Println("\tNew gateway")
-		newGateways.Inc()
-		gatewayMoved = true
 	}
 
-	// Gateway moved, insert new entry
-	if gatewayMoved {
-		log.Println("\tGateway moved")
-		insertNewLocationForGateway(gateway, lastHeard)
+	// Update gateway in db with fields that are set
+	gatewayDb.LastHeard = lastHeard
+	if gateway.GatewayEui != "" {
+		gatewayDb.GatewayEui = &gateway.GatewayEui
 	}
-
-	// TODO: temporarily always update the coordinates in the gateways table
-	//if gatewayMoved {
-	updateGatewayLocation(gatewayDbId, lastHeard, gateway)
+	if gateway.Description != "" {
+		gatewayDb.Description = &gateway.Description
+	}
+	// Only update the coordinates if the gateway moved, otherwise a slow moving gateway might never be detected as moved
+	//if(gatewayMoved) {
+	// Because we are using pointer types for lat lon and alt, we can force them to value 0 in the db
+	if gatewayLocationForced || gateway.Latitude != 0 {
+		gatewayDb.Latitude = &gateway.Latitude
+	}
+	if gatewayLocationForced || gateway.Longitude != 0 {
+		gatewayDb.Longitude = &gateway.Longitude
+	}
+	if gateway.Altitude != 0 {
+		gatewayDb.Altitude = &gateway.Altitude
+	}
+	if gateway.LocationAccuracy != 0 {
+		gatewayDb.LocationAccuracy = &gateway.LocationAccuracy
+	}
+	if gateway.LocationSource != "" {
+		gatewayDb.LocationSource = &gateway.LocationSource
+	}
 	//}
+
+	db.Save(&gatewayDb)
 
 	log.Println("\tUpdated")
 
@@ -178,23 +171,29 @@ func updateGateway(gateway types.TtnMapperGateway) {
 /*
 Takes a TTN Mapper Gateway and search for it in the database and return the database entry id
 */
-func getGatewayDbId(gateway types.TtnMapperGateway) (uint, error) {
+func getGatewayDb(gateway types.TtnMapperGateway) (types.Gateway, error) {
 
 	gatewayIndexer := types.GatewayIndexer{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
 	i, ok := gatewayDbIdCache.Load(gatewayIndexer)
 	if ok {
-		dbId := i.(uint)
-		return dbId, nil
+		gatewayDb := i.(types.Gateway)
+		return gatewayDb, nil
 
 	} else {
 		gatewayDb := types.Gateway{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
-		err := db.FirstOrCreate(&gatewayDb, &gatewayDb).Error
-		if err != nil {
-			return 0, err
+		db.Where(&gatewayDb).First(&gatewayDb)
+		if gatewayDb.ID == 0 {
+			// This is a new gateway, add it
+			log.Println("NEW GATEWAY")
+			newGateways.Inc()
+			err := db.FirstOrCreate(&gatewayDb, &gatewayDb).Error
+			if err != nil {
+				return gatewayDb, err
+			}
 		}
 
-		gatewayDbIdCache.Store(gatewayIndexer, gatewayDb.ID)
-		return gatewayDb.ID, nil
+		gatewayDbIdCache.Store(gatewayIndexer, gatewayDb)
+		return gatewayDb, nil
 	}
 }
 
@@ -238,13 +237,6 @@ func coordinatesValid(gateway types.TtnMapperGateway) (valid bool, reason string
 	return true, ""
 }
 
-func getGatewayLastLocation(gateway types.TtnMapperGateway) types.GatewayLocation {
-	gatewayLocation := types.GatewayLocation{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
-	db.Order("installed_at DESC").First(&gatewayLocation, &gatewayLocation)
-
-	return gatewayLocation
-}
-
 func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt time.Time) {
 	newLocation := types.GatewayLocation{
 		NetworkId:   gateway.NetworkId,
@@ -254,38 +246,4 @@ func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt tim
 		Longitude:   gateway.Longitude,
 	}
 	db.Create(&newLocation)
-}
-
-func updateGatewayLocation(gatewayDbId uint, lastHeard time.Time, gateway types.TtnMapperGateway) {
-	pgGateway := types.Gateway{
-		ID:        gatewayDbId,
-		Latitude:  &gateway.Latitude,
-		Longitude: &gateway.Longitude,
-		LastHeard: lastHeard,
-	}
-
-	// NOC doesn't provide altitude, so do not update it
-	if gateway.Altitude != 0 {
-		pgGateway.Altitude = &gateway.Altitude
-	}
-	if gateway.LocationAccuracy != 0 {
-		pgGateway.LocationAccuracy = &gateway.LocationAccuracy
-	}
-	if gateway.LocationSource != "" {
-		pgGateway.LocationSource = &gateway.LocationSource
-	}
-
-	db.Model(&pgGateway).Update(pgGateway)
-}
-
-// Returns true if lastHeard is after the lastHeard currently in the database
-func isLastHeardNewer(gatewayDbId uint, lastHeard time.Time) bool {
-	i, ok := gatewayLastHeardCache.Load(gatewayDbId)
-	if ok {
-		return lastHeard.After(i.(time.Time))
-	} else {
-		gatewayDb := types.Gateway{ID: gatewayDbId}
-		db.First(&gatewayDb, gatewayDbId)
-		return lastHeard.After(gatewayDb.LastHeard)
-	}
 }
