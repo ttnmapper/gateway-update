@@ -162,6 +162,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	db.Save(&gatewayDb)
 
 	log.Println("\tUpdated")
+	updatedGateways.Inc()
 
 	// Prometheus stats
 	gatewayElapsed := time.Since(gatewayStart)

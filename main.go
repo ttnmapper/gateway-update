@@ -82,6 +82,10 @@ var (
 		Name: "ttnmapper_gateway_processed_count",
 		Help: "The total number of gateway updates processed",
 	})
+	updatedGateways = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "ttnmapper_gateway_updated_count",
+		Help: "The total number of gateways updated",
+	})
 	newGateways = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "ttnmapper_gateway_new_count",
 		Help: "The total number of new gateways seen",
