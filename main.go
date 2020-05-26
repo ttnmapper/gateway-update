@@ -15,14 +15,13 @@ import (
 )
 
 type Configuration struct {
-	AmqpHost                    string `env:"AMQP_HOST"`
-	AmqpPort                    string `env:"AMQP_PORT"`
-	AmqpUser                    string `env:"AMQP_USER"`
-	AmqpPassword                string `env:"AMQP_PASSWORD"`
-	AmqpExchangeRawPackets      string `env:"AMQP_EXHANGE_RAW"`
-	AmqpExchangeGatewayStatuses string `env:"AMQP_EXHANGE_STATUS"`
-	AmqpQueueRawPackets         string `env:"AMQP_QUEUE"`
-	AmqpQueueGatewayStatuses    string `env:"AMQP_QUEUE"`
+	AmqpHost                 string `env:"AMQP_HOST"`
+	AmqpPort                 string `env:"AMQP_PORT"`
+	AmqpUser                 string `env:"AMQP_USER"`
+	AmqpPassword             string `env:"AMQP_PASSWORD"`
+	AmqpExchangeRawPackets   string `env:"AMQP_EXHANGE_RAW"`
+	AmqpQueueRawPackets      string `env:"AMQP_QUEUE"`
+	AmqpExchangeGatewayMoved string `env:"AMQP_EXCHANGE_GATEWAY_MOVED"`
 
 	PostgresHost     string `env:"POSTGRES_HOST"`
 	PostgresPort     string `env:"POSTGRES_PORT"`
@@ -47,14 +46,13 @@ type Configuration struct {
 }
 
 var myConfiguration = Configuration{
-	AmqpHost:                    "localhost",
-	AmqpPort:                    "5672",
-	AmqpUser:                    "user",
-	AmqpPassword:                "password",
-	AmqpExchangeRawPackets:      "new_packets",
-	AmqpExchangeGatewayStatuses: "gateway_status",
-	AmqpQueueRawPackets:         "gateway_updates_raw",
-	AmqpQueueGatewayStatuses:    "gateway_updates_status",
+	AmqpHost:                 "localhost",
+	AmqpPort:                 "5672",
+	AmqpUser:                 "user",
+	AmqpPassword:             "password",
+	AmqpExchangeRawPackets:   "new_packets",
+	AmqpQueueRawPackets:      "gateway_updates_raw",
+	AmqpExchangeGatewayMoved: "gateway_moved",
 
 	PostgresHost:     "localhost",
 	PostgresPort:     "5432",

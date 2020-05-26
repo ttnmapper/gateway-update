@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/streadway/amqp"
 	"github.com/umahmood/haversine"
 	"log"
 	"math"
@@ -126,8 +127,9 @@ func updateGateway(gateway types.TtnMapperGateway) {
 		if km > 0.1 {
 			//gatewayMoved = true
 			movedGateways.Inc()
-			log.Println("\tGateway moved")
+			log.Println("\tGATEWAY MOVED")
 			insertNewLocationForGateway(gateway, lastHeard)
+			publishMovedGateway(gateway)
 		}
 	}
 
@@ -247,4 +249,45 @@ func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt tim
 		Longitude:   gateway.Longitude,
 	}
 	db.Create(&newLocation)
+}
+
+func publishMovedGateway(gateway types.TtnMapperGateway) {
+
+	gatewayMovedAmqpConn, err := amqp.Dial("amqp://" + myConfiguration.AmqpUser + ":" + myConfiguration.AmqpPassword + "@" + myConfiguration.AmqpHost + ":" + myConfiguration.AmqpPort + "/")
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer gatewayMovedAmqpConn.Close()
+
+	gatewayMovedAmqpChannel, err := gatewayMovedAmqpConn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer gatewayMovedAmqpChannel.Close()
+
+	err = gatewayMovedAmqpChannel.ExchangeDeclare(
+		myConfiguration.AmqpExchangeGatewayMoved, // name
+		"fanout",                                 // type
+		true,                                     // durable
+		false,                                    // auto-deleted
+		false,                                    // internal
+		false,                                    // no-wait
+		nil,                                      // arguments
+	)
+	failOnError(err, "Failed to declare an exchange")
+
+	gatewayJsonData, err := json.Marshal(gateway)
+	if err != nil {
+		log.Println("\t\tCan't marshal gateway to json")
+		return
+	}
+
+	err = gatewayMovedAmqpChannel.Publish(
+		myConfiguration.AmqpExchangeGatewayMoved, // exchange
+		"",                                       // routing key
+		false,                                    // mandatory
+		false,                                    // immediate
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        gatewayJsonData,
+		})
+	failOnError(err, "Failed to publish a message")
+
+	log.Printf("\t\tPublished to AMQP exchange\n%s", gatewayJsonData)
 }
