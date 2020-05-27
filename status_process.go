@@ -157,6 +157,10 @@ func updateGateway(gateway types.TtnMapperGateway) {
 
 	db.Save(&gatewayDb)
 
+	// Also store updated object in cache
+	gatewayIndexer := types.GatewayIndexer{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
+	gatewayDbIdCache.Store(gatewayIndexer, gatewayDb)
+
 	log.Println("\tUpdated")
 	updatedGateways.Inc()
 
