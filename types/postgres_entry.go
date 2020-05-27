@@ -125,9 +125,9 @@ type Gateway struct {
 	GatewayEui  *string
 	Description *string
 
-	Latitude         *float64
-	Longitude        *float64
-	Altitude         *int32
+	Latitude         float64
+	Longitude        float64
+	Altitude         int32
 	LocationAccuracy *int32
 	LocationSource   *string
 

@@ -119,7 +119,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	// Check if gateway moved. If the location is not provided, do not move, unless it's forced to 0,0
 	//gatewayMoved := false
 	if gatewayLocationForced || (gateway.Latitude != 0.0 && gateway.Longitude != 0.0) {
-		oldLocation := haversine.Coord{Lat: *gatewayDb.Latitude, Lon: *gatewayDb.Longitude}
+		oldLocation := haversine.Coord{Lat: gatewayDb.Latitude, Lon: gatewayDb.Longitude}
 		newLocation := haversine.Coord{Lat: gateway.Latitude, Lon: gateway.Longitude}
 		_, km := haversine.Distance(oldLocation, newLocation)
 
@@ -143,16 +143,10 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	}
 	// Only update the coordinates if the gateway moved, otherwise a slow moving gateway might never be detected as moved
 	//if(gatewayMoved) {
-	// Because we are using pointer types for lat lon and alt, we can force them to value 0 in the db
-	if gatewayLocationForced || gateway.Latitude != 0 {
-		gatewayDb.Latitude = &gateway.Latitude
-	}
-	if gatewayLocationForced || gateway.Longitude != 0 {
-		gatewayDb.Longitude = &gateway.Longitude
-	}
-	if gateway.Altitude != 0 {
-		gatewayDb.Altitude = &gateway.Altitude
-	}
+	gatewayDb.Latitude = gateway.Latitude
+	gatewayDb.Longitude = gateway.Longitude
+	gatewayDb.Altitude = gateway.Altitude
+
 	if gateway.LocationAccuracy != 0 {
 		gatewayDb.LocationAccuracy = &gateway.LocationAccuracy
 	}
