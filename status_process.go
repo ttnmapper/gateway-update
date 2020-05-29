@@ -112,8 +112,8 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	if valid, reason := coordinatesValid(gateway); !valid {
 		log.Println("\tGateway coordinates invalid. " + reason)
 		log.Println("\tForcing to 0,0.")
-		gateway.Latitude = 0
-		gateway.Longitude = 0
+		gateway.Latitude = 0.0
+		gateway.Longitude = 0.0
 	}
 
 	// Check if gateway moved. If the location is not provided, do not move, unless it's forced to 0,0
@@ -128,6 +128,9 @@ func updateGateway(gateway types.TtnMapperGateway) {
 			gatewayMoved = true
 			movedGateways.Inc()
 			log.Println("\tGATEWAY MOVED")
+			log.Println(gatewayDb.Latitude, gatewayDb.Longitude)
+			log.Println(gateway.Latitude, gateway.Longitude)
+			log.Println(km)
 
 			movedGateway := types.TtnMapperGatewayMoved{}
 			movedGateway.NetworkId = gateway.NetworkId
