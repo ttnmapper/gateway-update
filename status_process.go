@@ -117,7 +117,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	}
 
 	// Check if gateway moved. If the location is not provided, do not move, unless it's forced to 0,0
-	//gatewayMoved := false
+	gatewayMoved := false
 	if gatewayLocationForced || (gateway.Latitude != 0.0 && gateway.Longitude != 0.0) {
 		oldLocation := haversine.Coord{Lat: gatewayDb.Latitude, Lon: gatewayDb.Longitude}
 		newLocation := haversine.Coord{Lat: gateway.Latitude, Lon: gateway.Longitude}
@@ -125,7 +125,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 
 		// Did it move more than 100m
 		if km > 0.1 {
-			//gatewayMoved = true
+			gatewayMoved = true
 			movedGateways.Inc()
 			log.Println("\tGATEWAY MOVED")
 			insertNewLocationForGateway(gateway, lastHeard)
@@ -141,19 +141,19 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	if gateway.Description != "" {
 		gatewayDb.Description = &gateway.Description
 	}
-	// Only update the coordinates if the gateway moved, otherwise a slow moving gateway might never be detected as moved
-	//if(gatewayMoved) {
-	gatewayDb.Latitude = gateway.Latitude
-	gatewayDb.Longitude = gateway.Longitude
-	gatewayDb.Altitude = gateway.Altitude
+	// Only update the coordinates if the gateway moved, otherwise radar plots will not have it's origin at the gateway when a gateway has gps drift
+	if gatewayMoved {
+		gatewayDb.Latitude = gateway.Latitude
+		gatewayDb.Longitude = gateway.Longitude
+		gatewayDb.Altitude = gateway.Altitude
 
-	if gateway.LocationAccuracy != 0 {
-		gatewayDb.LocationAccuracy = &gateway.LocationAccuracy
+		if gateway.LocationAccuracy != 0 {
+			gatewayDb.LocationAccuracy = &gateway.LocationAccuracy
+		}
+		if gateway.LocationSource != "" {
+			gatewayDb.LocationSource = &gateway.LocationSource
+		}
 	}
-	if gateway.LocationSource != "" {
-		gatewayDb.LocationSource = &gateway.LocationSource
-	}
-	//}
 
 	db.Save(&gatewayDb)
 
