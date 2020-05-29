@@ -128,9 +128,9 @@ func updateGateway(gateway types.TtnMapperGateway) {
 			gatewayMoved = true
 			movedGateways.Inc()
 			log.Println("\tGATEWAY MOVED")
-			log.Println(gatewayDb.Latitude, gatewayDb.Longitude)
-			log.Println(gateway.Latitude, gateway.Longitude)
-			log.Println(km)
+			log.Println("\t", gatewayDb.Latitude, gatewayDb.Longitude)
+			log.Println("\t", gateway.Latitude, gateway.Longitude)
+			log.Println("\t", km, "km")
 
 			movedGateway := types.TtnMapperGatewayMoved{}
 			movedGateway.NetworkId = gateway.NetworkId
@@ -305,5 +305,6 @@ func publishMovedGateway(gateway types.TtnMapperGatewayMoved) {
 		})
 	failOnError(err, "Failed to publish a message")
 
-	log.Printf("\t\tPublished to AMQP exchange\n%s", gatewayJsonData)
+	log.Printf("\tPublished to AMQP exchange")
+	//log.Printf("\t%s", gatewayJsonData)
 }
