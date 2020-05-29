@@ -128,8 +128,23 @@ func updateGateway(gateway types.TtnMapperGateway) {
 			gatewayMoved = true
 			movedGateways.Inc()
 			log.Println("\tGATEWAY MOVED")
+
+			movedGateway := types.TtnMapperGatewayMoved{}
+			movedGateway.NetworkId = gateway.NetworkId
+			movedGateway.GatewayId = gateway.GatewayId
+
+			movedGateway.Time = lastHeard.UnixNano() // the time the move was detected, but should not be used
+
+			movedGateway.LatitudeOld = gatewayDb.Latitude
+			movedGateway.LongitudeOld = gatewayDb.Longitude
+			movedGateway.AltitudeOld = gatewayDb.Altitude
+
+			movedGateway.LatitudeNew = gateway.Latitude
+			movedGateway.LongitudeNew = gateway.Longitude
+			movedGateway.AltitudeNew = gateway.Altitude
+
 			insertNewLocationForGateway(gateway, lastHeard)
-			publishMovedGateway(gateway)
+			publishMovedGateway(movedGateway)
 		}
 	}
 
@@ -249,7 +264,7 @@ func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt tim
 	db.Create(&newLocation)
 }
 
-func publishMovedGateway(gateway types.TtnMapperGateway) {
+func publishMovedGateway(gateway types.TtnMapperGatewayMoved) {
 
 	gatewayMovedAmqpConn, err := amqp.Dial("amqp://" + myConfiguration.AmqpUser + ":" + myConfiguration.AmqpPassword + "@" + myConfiguration.AmqpHost + ":" + myConfiguration.AmqpPort + "/")
 	failOnError(err, "Failed to connect to RabbitMQ")
