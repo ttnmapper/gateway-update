@@ -27,6 +27,11 @@ func processRawPackets() {
 			log.Print("AMQP ", "", "\t", gateway.GatewayId+"\t", updateTime)
 			gateway.Time = message.Time
 
+			// Ignore locations obtained from live data
+			gateway.Latitude = 0
+			gateway.Longitude = 0
+			gateway.Altitude = 0
+
 			// Packet broker metadata will provide network id. For now assume TTN
 			gateway.NetworkId = "thethingsnetwork.org"
 
@@ -47,10 +52,15 @@ func processNocGateway(gatewayId string, gateway types.NocGateway) {
 
 	ttnMapperGateway.GatewayId = gatewayId
 	ttnMapperGateway.Time = gateway.Timestamp.UnixNano()
-	ttnMapperGateway.Latitude = gateway.Location.Latitude
-	ttnMapperGateway.Longitude = gateway.Location.Longitude
+	//ttnMapperGateway.Latitude = gateway.Location.Latitude
+	//ttnMapperGateway.Longitude = gateway.Location.Longitude
 	//ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
 	//ttnMapperGateway.Description = gateway.Description
+
+	// Ignore locations obtained from NOC
+	ttnMapperGateway.Latitude = 0
+	ttnMapperGateway.Longitude = 0
+	ttnMapperGateway.Altitude = 0
 
 	updateGateway(ttnMapperGateway)
 }
@@ -67,9 +77,12 @@ func processWebGateway(gateway types.WebGateway) {
 
 	ttnMapperGateway.GatewayId = gateway.ID
 	ttnMapperGateway.Time = gateway.LastSeen.UnixNano()
+
+	// Only use location obtained from web api
 	ttnMapperGateway.Latitude = gateway.Location.Latitude
 	ttnMapperGateway.Longitude = gateway.Location.Longitude
 	ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
+
 	ttnMapperGateway.Description = gateway.Description
 
 	updateGateway(ttnMapperGateway)
