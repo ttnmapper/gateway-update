@@ -130,8 +130,9 @@ func main() {
 	}
 
 	var dbErr error
-	db, dbErr = gorm.Open("postgres", "host="+myConfiguration.PostgresHost+" port="+myConfiguration.PostgresPort+" user="+myConfiguration.PostgresUser+" dbname="+myConfiguration.PostgresDatabase+" password="+myConfiguration.PostgresPassword+"")
+	db, dbErr = gorm.Open("postgres", "host="+myConfiguration.PostgresHost+" port="+myConfiguration.PostgresPort+" user="+myConfiguration.PostgresUser+" dbname="+myConfiguration.PostgresDatabase+" password="+myConfiguration.PostgresPassword+" sslmode=prefer")
 	if dbErr != nil {
+		log.Println("Error connecting to Postgres")
 		panic(dbErr.Error())
 	}
 	defer db.Close()
