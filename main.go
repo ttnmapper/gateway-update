@@ -76,6 +76,7 @@ var myConfiguration = Configuration{
 }
 
 var (
+	// Prometheus stats
 	processedGateways = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "ttnmapper_gateway_processed_count",
 		Help: "The total number of gateway updates processed",
@@ -98,9 +99,8 @@ var (
 		Help:    "How long the processing of a gateway status took",
 		Buckets: []float64{0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 5, 10, 100, 1000, 10000},
 	})
-)
 
-var (
+	// Other global vars
 	gatewayDbIdCache  sync.Map
 	rawPacketsChannel = make(chan amqp.Delivery)
 	db                *gorm.DB
