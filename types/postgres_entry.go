@@ -27,7 +27,7 @@ type Packet struct {
 	ChannelIndex           uint32
 	Rssi                   float32  `gorm:"type:numeric(6,2)"`
 	SignalRssi             *float32 `gorm:"type:numeric(6,2)"`
-	Snr                    *float32 `gorm:"type:numeric(5,2)"`
+	Snr                    float32  `gorm:"type:numeric(5,2)"`
 
 	Latitude         float64  `gorm:"not null;type:numeric(10,6);index:latitude"`
 	Longitude        float64  `gorm:"not null;type:numeric(10,6);index:longitude"`
