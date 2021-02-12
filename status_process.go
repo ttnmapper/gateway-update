@@ -27,10 +27,13 @@ func processRawPackets() {
 			log.Print("AMQP ", "", "\t", gateway.GatewayId+"\t", updateTime)
 			gateway.Time = message.Time
 
-			// Ignore locations obtained from live data
-			gateway.Latitude = 0
-			gateway.Longitude = 0
-			gateway.Altitude = 0
+			// Ignore locations obtained from live data in TTNv2, as it takes 6 hours to update, or is often not set.
+			// TODO: we can have an oscillating bahaviour between location from metadata and location from other sources. Is this only a V2 issue?
+			if message.NetworkType == types.NS_TTN_V2 {
+				gateway.Latitude = 0
+				gateway.Longitude = 0
+				gateway.Altitude = 0
+			}
 
 			gateway.NetworkId = message.NetworkType + "://" + message.NetworkAddress
 			log.Println("Network ID =", gateway.NetworkId)
@@ -229,6 +232,7 @@ func getGatewayDb(gateway types.TtnMapperGateway) (types.Gateway, error) {
 	}
 }
 
+// TODO cache this in memory for a certain period of time
 func isCoordinatesForced(gateway types.TtnMapperGateway) (bool, types.GatewayLocationForce) {
 	forcedCoords := types.GatewayLocationForce{NetworkId: gateway.NetworkId, GatewayId: gateway.GatewayId}
 	db.First(&forcedCoords, &forcedCoords)
