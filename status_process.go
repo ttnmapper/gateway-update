@@ -32,8 +32,8 @@ func processRawPackets() {
 			gateway.Longitude = 0
 			gateway.Altitude = 0
 
-			// Packet broker metadata will provide network id. For now assume TTN
-			gateway.NetworkId = "thethingsnetwork.org"
+			gateway.NetworkId = message.NetworkType + "://" + message.NetworkAddress
+			log.Println("Network ID =", gateway.NetworkId)
 
 			updateGateway(gateway)
 		}

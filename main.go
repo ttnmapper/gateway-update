@@ -38,7 +38,7 @@ type Configuration struct {
 	NocBasicAuth bool   `env:"NOC_BASIC_AUTH"`
 	NocUsername  string `env:"NOC_USERNAME"`
 	NocPassword  string `env:"NOC_PASSWORD"`
-	FetchWeb     bool   `env:"FETCH_WEB"` // Should we periodivally fetch gateway statuses from the TTN website (TTNv2 and v3)
+	FetchWeb     bool   `env:"FETCH_WEB"` // Should we periodically fetch gateway statuses from the TTN website (TTNv2 and v3)
 	WebUrl       string `env:"WEB_URL"`
 	// TODO: Fetch gateway statuses from V3 API or Packet Broker API
 
