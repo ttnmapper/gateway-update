@@ -35,9 +35,6 @@ func processRawPackets() {
 				gateway.Altitude = 0
 			}
 
-			gateway.NetworkId = message.NetworkType + "://" + message.NetworkAddress
-			log.Println("Network ID =", gateway.NetworkId)
-
 			updateGateway(gateway)
 		}
 	}
