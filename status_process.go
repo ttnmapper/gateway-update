@@ -28,7 +28,7 @@ func processRawPackets() {
 			gateway.Time = message.Time
 
 			// Ignore locations obtained from live data in TTNv2, as it takes 6 hours to update, or is often not set.
-			// TODO: we can have an oscillating bahaviour between location from metadata and location from other sources. Is this only a V2 issue?
+			// TODO: we can have an oscillating behaviour between location from metadata and location from other sources. Is this only a V2 issue?
 			if message.NetworkType == types.NS_TTN_V2 {
 				gateway.Latitude = 0
 				gateway.Longitude = 0
