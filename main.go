@@ -10,8 +10,10 @@ import (
 	"github.com/tkanos/gonfig"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"sync"
 	"ttnmapper-gateway-update/types"
+	"ttnmapper-gateway-update/utils"
 )
 
 type Configuration struct {
@@ -113,7 +115,7 @@ func main() {
 		log.Println(err)
 	}
 
-	log.Printf("[Configuration]\n%s\n", prettyPrint(myConfiguration)) // output: [UserA, UserB]
+	log.Printf("[Configuration]\n%s\n", utils.PrettyPrint(myConfiguration)) // output: [UserA, UserB]
 
 	http.Handle("/metrics", promhttp.Handler())
 	go func() {

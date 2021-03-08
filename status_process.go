@@ -8,6 +8,7 @@ import (
 	"math"
 	"time"
 	"ttnmapper-gateway-update/types"
+	"ttnmapper-gateway-update/utils"
 )
 
 func processRawPackets() {
@@ -35,7 +36,7 @@ func processRawPackets() {
 				gateway.Altitude = 0
 			}
 
-			updateGateway(gateway)
+			UpdateGateway(gateway)
 		}
 	}
 }
@@ -62,7 +63,7 @@ func processNocGateway(gatewayId string, gateway types.NocGateway) {
 	ttnMapperGateway.Longitude = 0
 	ttnMapperGateway.Altitude = 0
 
-	updateGateway(ttnMapperGateway)
+	UpdateGateway(ttnMapperGateway)
 }
 
 func processWebGateway(gateway types.WebGateway) {
@@ -85,10 +86,10 @@ func processWebGateway(gateway types.WebGateway) {
 
 	ttnMapperGateway.Description = gateway.Description
 
-	updateGateway(ttnMapperGateway)
+	UpdateGateway(ttnMapperGateway)
 }
 
-func updateGateway(gateway types.TtnMapperGateway) {
+func UpdateGateway(gateway types.TtnMapperGateway) {
 	gatewayStart := time.Now()
 
 	// Count number of gateways we processed
@@ -102,7 +103,7 @@ func updateGateway(gateway types.TtnMapperGateway) {
 	// Find the database IDs for this gateway and it's antennas
 	gatewayDb, err := getGatewayDb(gateway)
 	if err != nil {
-		failOnError(err, "Can't find gateway in DB")
+		utils.FailOnError(err, "Can't find gateway in DB")
 	}
 
 	// Check if our lastHeard time is newer that the lastHeard in the database
@@ -284,11 +285,11 @@ func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt tim
 func publishMovedGateway(gateway types.TtnMapperGatewayMoved) {
 
 	gatewayMovedAmqpConn, err := amqp.Dial("amqp://" + myConfiguration.AmqpUser + ":" + myConfiguration.AmqpPassword + "@" + myConfiguration.AmqpHost + ":" + myConfiguration.AmqpPort + "/")
-	failOnError(err, "Failed to connect to RabbitMQ")
+	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer gatewayMovedAmqpConn.Close()
 
 	gatewayMovedAmqpChannel, err := gatewayMovedAmqpConn.Channel()
-	failOnError(err, "Failed to open a channel")
+	utils.FailOnError(err, "Failed to open a channel")
 	defer gatewayMovedAmqpChannel.Close()
 
 	err = gatewayMovedAmqpChannel.ExchangeDeclare(
@@ -300,7 +301,7 @@ func publishMovedGateway(gateway types.TtnMapperGatewayMoved) {
 		false,                                    // no-wait
 		nil,                                      // arguments
 	)
-	failOnError(err, "Failed to declare an exchange")
+	utils.FailOnError(err, "Failed to declare an exchange")
 
 	gatewayJsonData, err := json.Marshal(gateway)
 	if err != nil {
@@ -317,7 +318,7 @@ func publishMovedGateway(gateway types.TtnMapperGatewayMoved) {
 			ContentType: "text/plain",
 			Body:        gatewayJsonData,
 		})
-	failOnError(err, "Failed to publish a message")
+	utils.FailOnError(err, "Failed to publish a message")
 
 	log.Printf("\tPublished to AMQP exchange")
 	//log.Printf("\t%s", gatewayJsonData)
