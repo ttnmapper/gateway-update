@@ -85,39 +85,33 @@ func startPeriodicFetchers() {
 	nocTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
 	webTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
 
-	shouldFetchNoc := false
-	shouldFetchWeb := false
-
 	go func() {
 		for {
 			select {
 			case <-nocTicker.C:
-				shouldFetchNoc = true
+				if myConfiguration.FetchNoc {
+					go fetchNocStatuses()
+				}
 			case <-webTicker.C:
-				shouldFetchWeb = true
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			if shouldFetchNoc && myConfiguration.FetchNoc {
-				shouldFetchNoc = false
-				fetchNocStatuses()
-			}
-			if shouldFetchWeb && myConfiguration.FetchWeb {
-				shouldFetchWeb = false
-				fetchWebStatuses()
+				if myConfiguration.FetchWeb {
+					go fetchWebStatuses()
+				}
 			}
 		}
 	}()
 }
 
+var busyFetchingNoc = false
+
 func fetchNocStatuses() {
+	if busyFetchingNoc {
+		return
+	}
+	busyFetchingNoc = true
 	log.Println("Fetching NOC statuses")
 
 	httpClient := http.Client{
-		Timeout: time.Second * 60, // Maximum of 2 secs
+		Timeout: time.Second * 60, // Maximum of 1 minute
 	}
 
 	req, err := http.NewRequest(http.MethodGet, myConfiguration.NocUrl, nil)
@@ -152,13 +146,20 @@ func fetchNocStatuses() {
 	}
 
 	log.Println("Fetching NOC statuses done")
+	busyFetchingNoc = false
 }
 
+var busyFetchingWeb = false
+
 func fetchWebStatuses() {
+	if busyFetchingWeb {
+		return
+	}
+	busyFetchingWeb = true
 	log.Println("Fetching web statuses")
 
 	httpClient := http.Client{
-		Timeout: time.Second * 60, // Maximum of 2 secs
+		Timeout: time.Second * 60, // Maximum of 1 minute
 	}
 
 	req, err := http.NewRequest(http.MethodGet, myConfiguration.WebUrl, nil)
@@ -193,4 +194,5 @@ func fetchWebStatuses() {
 	}
 
 	log.Println("Fetching web statuses done")
+	busyFetchingWeb = false
 }

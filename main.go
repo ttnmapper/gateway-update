@@ -12,7 +12,6 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"sync"
-	"ttnmapper-gateway-update/types"
 	"ttnmapper-gateway-update/utils"
 )
 
@@ -74,7 +73,7 @@ var myConfiguration = Configuration{
 	FetchWeb:     false,
 	WebUrl:       "https://www.thethingsnetwork.org/gateway-data/",
 
-	StatusFetchInterval: 10,
+	StatusFetchInterval: 3600, // seconds
 }
 
 var (
@@ -144,13 +143,13 @@ func main() {
 		db.LogMode(true)
 	}
 
-	// Create tables if they do not exist
-	log.Println("Performing auto migrate")
-	db.AutoMigrate(
-		&types.Gateway{},
-		&types.GatewayLocation{},
-		&types.GatewayLocationForce{},
-	)
+	//// Create tables if they do not exist
+	//log.Println("Performing auto migrate")
+	//db.AutoMigrate(
+	//	&types.Gateway{},
+	//	&types.GatewayLocation{},
+	//	&types.GatewayLocationForce{},
+	//)
 
 	// Start amqp listener on this thread - blocking function
 	if myConfiguration.FetchAmqp {
