@@ -268,6 +268,11 @@ func coordinatesValid(gateway types.TtnMapperGateway) (valid bool, reason string
 		return false, "Ukrainian hack coordinates"
 	}
 
+	// Shenzhen factory, reusing EUIs and moving valid gateways
+	if gateway.Latitude > 22.69 && gateway.Latitude < 22.71 && gateway.Longitude > 114.2300000 && gateway.Longitude < 114.25 {
+		return false, "Shenzhen factory coordinates"
+	}
+
 	return true, ""
 }
 
