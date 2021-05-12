@@ -17,6 +17,9 @@ func subscribeToRabbitRaw() {
 		utils.FailOnError(err, "Failed to connect to RabbitMQ")
 		defer conn.Close()
 
+		// Create a channel for errors
+		notify := conn.NotifyClose(make(chan *amqp.Error)) //error channel
+
 		ch, err := conn.Channel()
 		utils.FailOnError(err, "Failed to open a channel")
 		defer ch.Close()
@@ -70,9 +73,21 @@ func subscribeToRabbitRaw() {
 
 		log.Println("AMQP started")
 
-		for d := range msgs {
-			rawPacketsChannel <- d
+	waitForMessages:
+		for {
+			select {
+			case err := <-notify:
+				if err != nil {
+					log.Println(err.Error())
+				}
+				break waitForMessages
+			case d := <-msgs:
+				//log.Printf(" [a] Packet received")
+				rawPacketsChannel <- d
+			}
 		}
+
+		log.Fatal("Subscribe channel closed")
 	}()
 
 	// Start the thread that processes new amqp messages

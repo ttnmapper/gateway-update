@@ -15,17 +15,19 @@ func processRawPackets() {
 	// Wait for a message and insert it into Postgres
 	for d := range rawPacketsChannel {
 
-		// The message form amqp is a json string. Unmarshal to ttnmapper uplink struct
+		// The message from amqp is a json string. Unmarshal to ttnmapper uplink struct
 		var message types.TtnMapperUplinkMessage
 		if err := json.Unmarshal(d.Body, &message); err != nil {
 			log.Print("AMQP " + err.Error())
 			continue
 		}
 
-		// Iterate gateways. We store it flat in the database
+		// Iterate gateways in packet
 		for _, gateway := range message.Gateways {
 			updateTime := time.Unix(0, message.Time)
 			log.Print("AMQP ", "", "\t", gateway.GatewayId+"\t", updateTime)
+
+			// We use the "last heard" on the network
 			gateway.Time = message.Time
 
 			// Ignore locations obtained from live data in TTNv2, as it takes 6 hours to update, or is often not set.
