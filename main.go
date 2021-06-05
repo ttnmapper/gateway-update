@@ -65,7 +65,7 @@ var myConfiguration = Configuration{
 	PrometheusPort: "9100",
 
 	FetchAmqp:    false,
-	FetchNoc:     true,
+	FetchNoc:     false,
 	NocUrl:       "http://noc.thethingsnetwork.org:8085/api/v2/gateways",
 	NocBasicAuth: false,
 	NocUsername:  "",
