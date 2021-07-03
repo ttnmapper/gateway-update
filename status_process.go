@@ -43,54 +43,6 @@ func processRawPackets() {
 	}
 }
 
-func processNocGateway(gatewayId string, gateway types.NocGateway) {
-	ttnMapperGateway := types.TtnMapperGateway{}
-
-	if gateway.Timestamp.IsZero() {
-		return
-	}
-
-	// Assume NOC lists only TTN gateways. Need to check this as a private V2 network can also have a NOC
-	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
-
-	ttnMapperGateway.GatewayId = gatewayId
-	ttnMapperGateway.Time = gateway.Timestamp.UnixNano()
-	//ttnMapperGateway.Latitude = gateway.Location.Latitude
-	//ttnMapperGateway.Longitude = gateway.Location.Longitude
-	//ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
-	//ttnMapperGateway.Description = gateway.Description
-
-	// Ignore locations obtained from NOC
-	ttnMapperGateway.Latitude = 0
-	ttnMapperGateway.Longitude = 0
-	ttnMapperGateway.Altitude = 0
-
-	UpdateGateway(ttnMapperGateway)
-}
-
-func processWebGateway(gateway types.WebGateway) {
-	ttnMapperGateway := types.TtnMapperGateway{}
-
-	if gateway.LastSeen == nil {
-		return
-	}
-
-	// Website lists only TTN gateways
-	ttnMapperGateway.NetworkId = "thethingsnetwork.org"
-
-	ttnMapperGateway.GatewayId = gateway.ID
-	ttnMapperGateway.Time = gateway.LastSeen.UnixNano()
-
-	// Only use location obtained from web api
-	ttnMapperGateway.Latitude = gateway.Location.Latitude
-	ttnMapperGateway.Longitude = gateway.Location.Longitude
-	ttnMapperGateway.Altitude = int32(gateway.Location.Altitude)
-
-	ttnMapperGateway.Description = gateway.Description
-
-	UpdateGateway(ttnMapperGateway)
-}
-
 func UpdateGateway(gateway types.TtnMapperGateway) {
 	gatewayStart := time.Now()
 

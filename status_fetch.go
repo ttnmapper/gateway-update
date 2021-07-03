@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/streadway/amqp"
 	"log"
-	"net/http"
 	"time"
-	"ttnmapper-gateway-update/types"
+	"ttnmapper-gateway-update/noc"
+	"ttnmapper-gateway-update/packet_broker"
 	"ttnmapper-gateway-update/utils"
+	"ttnmapper-gateway-update/web"
 )
 
 func subscribeToRabbitRaw() {
@@ -99,6 +99,7 @@ func subscribeToRabbitRaw() {
 func startPeriodicFetchers() {
 	nocTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
 	webTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
+	pbTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
 
 	go func() {
 		for {
@@ -110,6 +111,10 @@ func startPeriodicFetchers() {
 			case <-webTicker.C:
 				if myConfiguration.FetchWeb {
 					go fetchWebStatuses()
+				}
+			case <-pbTicker.C:
+				if myConfiguration.FetchPacketBroker {
+					go fetchPacketBrokerStatuses()
 				}
 			}
 		}
@@ -123,44 +128,17 @@ func fetchNocStatuses() {
 		return
 	}
 	busyFetchingNoc = true
-	log.Println("Fetching NOC statuses")
 
-	httpClient := http.Client{
-		Timeout: time.Second * 60, // Maximum of 1 minute
-	}
-
-	req, err := http.NewRequest(http.MethodGet, myConfiguration.NocUrl, nil)
+	gateways, err := noc.FetchNocStatuses()
 	if err != nil {
-		log.Println(err)
-		return
+		log.Println(err.Error())
+	} else {
+		for id, gateway := range gateways {
+			ttnMapperGateway := noc.NocGatewayToTtnMapperGateway(id, gateway)
+			UpdateGateway(ttnMapperGateway)
+		}
 	}
 
-	req.Header.Set("User-Agent", "ttnmapper-update-gateway")
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer res.Body.Close()
-
-	nocData := types.NocStatus{}
-	err = json.NewDecoder(res.Body).Decode(&nocData)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	count := 0
-	total := len(nocData.Statuses)
-	for gatewayId, gateway := range nocData.Statuses {
-		count++
-		log.Print("NOC ", count, "/", total, "\t", gatewayId+"\t", gateway.Timestamp)
-		processNocGateway(gatewayId, gateway)
-	}
-
-	log.Println("Fetching NOC statuses done")
 	busyFetchingNoc = false
 }
 
@@ -171,43 +149,39 @@ func fetchWebStatuses() {
 		return
 	}
 	busyFetchingWeb = true
-	log.Println("Fetching web statuses")
 
-	httpClient := http.Client{
-		Timeout: time.Second * 60, // Maximum of 1 minute
-	}
-
-	req, err := http.NewRequest(http.MethodGet, myConfiguration.WebUrl, nil)
+	gateways, err := web.FetchWebStatuses()
 	if err != nil {
-		log.Println(err)
-		return
+		log.Println(err.Error())
+	} else {
+		for _, gateway := range gateways {
+			ttnMapperGateway := web.WebGatewayToTtnMapperGateway(*gateway)
+			UpdateGateway(ttnMapperGateway)
+		}
 	}
 
-	req.Header.Set("User-Agent", "ttnmapper-update-gateway")
-
-	res, err := httpClient.Do(req)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer res.Body.Close()
-
-	webData := map[string]*types.WebGateway{}
-	err = json.NewDecoder(res.Body).Decode(&webData)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	count := 0
-	total := len(webData)
-	for gatewayId, gateway := range webData {
-		count++
-		log.Print("WEB ", count, "/", total, "\t", gatewayId+"\t", gateway.LastSeen)
-		processWebGateway(*gateway)
-	}
-
-	log.Println("Fetching web statuses done")
 	busyFetchingWeb = false
+}
+
+var busyFetchingPacketBroker = false
+
+func fetchPacketBrokerStatuses() {
+	if busyFetchingPacketBroker {
+		return
+	}
+	busyFetchingPacketBroker = true
+
+	gateways, err := packet_broker.FetchStatuses()
+	if err != nil {
+		log.Println(err.Error())
+	} else {
+		for _, gateway := range gateways {
+			ttnMapperGateway, err := packet_broker.PbGatewayToTtnMapperGateway(gateway)
+			if err == nil {
+				UpdateGateway(ttnMapperGateway)
+			}
+		}
+	}
+
+	busyFetchingPacketBroker = false
 }
