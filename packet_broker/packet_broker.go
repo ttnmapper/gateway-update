@@ -19,7 +19,7 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 	}
 
 	offset := 0
-	limit := 1000
+	limit := 10
 	//online := true // TODO change to online only to make responses smaller
 	params := Openapi.ListGatewaysParams{
 		DistanceWithin: nil,
@@ -34,13 +34,18 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 		if err != nil {
 			return gateways, err
 		}
-		gateways = append(gateways, *listGatewaysResponse.JSON200...)
-		if len(*listGatewaysResponse.JSON200) == 0 {
+		if listGatewaysResponse.JSON200 != nil {
+			gateways = append(gateways, *listGatewaysResponse.JSON200...)
+			if len(*listGatewaysResponse.JSON200) == 0 {
+				break
+			}
+		} else {
 			break
 		}
 
 		// Move offset for next call
 		offset += limit
+		break
 	}
 
 	return gateways, nil
