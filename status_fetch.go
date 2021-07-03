@@ -135,6 +135,7 @@ func fetchNocStatuses() {
 	} else {
 		for id, gateway := range gateways {
 			ttnMapperGateway := noc.NocGatewayToTtnMapperGateway(id, gateway)
+			log.Print("NOC ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 			UpdateGateway(ttnMapperGateway)
 		}
 	}
@@ -156,6 +157,7 @@ func fetchWebStatuses() {
 	} else {
 		for _, gateway := range gateways {
 			ttnMapperGateway := web.WebGatewayToTtnMapperGateway(*gateway)
+			log.Print("WEB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 			UpdateGateway(ttnMapperGateway)
 		}
 	}
@@ -178,6 +180,7 @@ func fetchPacketBrokerStatuses() {
 		for _, gateway := range gateways {
 			ttnMapperGateway, err := packet_broker.PbGatewayToTtnMapperGateway(gateway)
 			if err == nil {
+				log.Print("PB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 				UpdateGateway(ttnMapperGateway)
 			}
 		}
