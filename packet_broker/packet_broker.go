@@ -20,13 +20,13 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 
 	offset := 0
 	limit := 1000
-	//online := true // TODO change to online only to make responses smaller
+	online := true // TODO change to online only to make responses smaller
 	params := Openapi.ListGatewaysParams{
 		DistanceWithin: nil,
 		Offset:         &offset,
 		Limit:          &limit,
 		UpdatedSince:   nil,
-		Online:         nil,
+		Online:         &online,
 	}
 
 	for {
