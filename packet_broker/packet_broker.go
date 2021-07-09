@@ -88,11 +88,13 @@ func PbGatewayToTtnMapperGateway(gatewayIn Openapi.Gateway) (types.TtnMapperGate
 		gatewayOut.Time = time.Now().UnixNano()
 	}
 
-	gatewayOut.Latitude = gatewayIn.Location.Latitude
-	gatewayOut.Longitude = gatewayIn.Location.Longitude
-	if gatewayIn.Location.Altitude != nil {
-		altitude := *gatewayIn.Location.Altitude
-		gatewayOut.Altitude = int32(altitude)
+	if gatewayIn.Location != nil {
+		gatewayOut.Latitude = gatewayIn.Location.Latitude
+		gatewayOut.Longitude = gatewayIn.Location.Longitude
+		if gatewayIn.Location.Altitude != nil {
+			altitude := *gatewayIn.Location.Altitude
+			gatewayOut.Altitude = int32(altitude)
+		}
 	}
 
 	// TODO: hdop is not a valid accuracy in metres. Keep an eye on https://github.com/packetbroker/api/issues/32
