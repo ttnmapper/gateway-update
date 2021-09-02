@@ -28,6 +28,17 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 		UpdatedSince:   nil,
 		Online:         &online,
 	}
+	//params.DistanceWithin = (*struct {
+	//	Openapi.Point `yaml:",inline"`
+	//	Distance      float64 `json:"distance"`
+	//	Latitude      float32 `json:"latitude"`
+	//	Longitude     float32 `json:"longitude"`
+	//})(&struct {
+	//	Openapi.Point
+	//	Distance  float64
+	//	Latitude  float32
+	//	Longitude float32
+	//}{Point: Openapi.Point{Latitude: 22.7, Longitude: 114.234}, Distance: 7500, Latitude: 22.7, Longitude: 114.234})
 
 	for {
 		listGatewaysResponse, err := client.ListGatewaysWithResponse(context.Background(), &params)
