@@ -77,7 +77,7 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 	}
 
 	// Check if the provided coordinates are valid
-	if valid, reason := coordinatesValid(gateway); !valid {
+	if valid, reason := CoordinatesValid(gateway); !valid {
 		log.Println("\tGateway coordinates invalid. " + reason)
 		log.Println("\tForcing to 0,0.")
 		gateway.Latitude = 0.0
@@ -127,7 +127,7 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 	if gateway.Description != "" {
 		gatewayDb.Description = &gateway.Description
 	}
-	// Only update the coordinates if the gateway moved, otherwise radar plots will not have it's origin at the gateway when a gateway has gps drift
+	// Only update the coordinates if the gateway moved, otherwise radar plots will not have its origin at the gateway when a gateway has gps drift
 	if gatewayMoved {
 		gatewayDb.Latitude = gateway.Latitude
 		gatewayDb.Longitude = gateway.Longitude
@@ -195,7 +195,7 @@ func isCoordinatesForced(gateway types.TtnMapperGateway) (bool, types.GatewayLoc
 	}
 }
 
-func coordinatesValid(gateway types.TtnMapperGateway) (valid bool, reason string) {
+func CoordinatesValid(gateway types.TtnMapperGateway) (valid bool, reason string) {
 
 	if math.Abs(gateway.Latitude) < 1 && math.Abs(gateway.Longitude) < 1 {
 		return false, "Null island"

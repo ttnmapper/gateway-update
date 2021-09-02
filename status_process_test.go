@@ -76,3 +76,13 @@ func TestAbs(t *testing.T) {
 
 	CloseDb()
 }
+
+func TestCoordinatesValid(t *testing.T) {
+	gateway := types.TtnMapperGateway{Latitude: 22.700000762939453, Longitude: 114.23999786376953}
+	valid, reason := CoordinatesValid(gateway)
+	if valid {
+		t.Fatalf("Shenzen factory should not be valid")
+	} else {
+		log.Println(reason)
+	}
+}
