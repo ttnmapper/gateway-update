@@ -6,19 +6,20 @@ import (
 
 type Packet struct {
 	ID   uint
-	Time time.Time `gorm:"not null;index=time"`
+	Time time.Time `gorm:"not null;index:idx_packets_antenna_id_time_experiment_id,priority:3;index:idx_packets_device_id_time,priority:2"` // index priority 11 is lower than default 10. Device and gateway is less unique, so will filter better first step.
 
-	DeviceID uint `gorm:"not null;index=device"`
+	DeviceID uint `gorm:"not null;index:idx_packets_device_id_time_experiment_id,priority:1"`
 
 	FPort uint8
 	FCnt  uint32
 
-	FrequencyID  uint
+	FrequencyID  uint `gorm:"index:idx_packets_antenna_id_frequency_id,priority:2"`
 	DataRateID   uint
 	CodingRateID uint
 
 	// Gateway data
-	AntennaID              uint `gorm:"not null;index=antenna"`
+	// TODO antennaid time latitude experiment index, as we need to select max latitude since gateway moved
+	AntennaID              uint `gorm:"not null;index:idx_packets_antenna_id_time,priority:1;index:idx_packets_antenna_id_latitude_experiment_id,priority:1;index:idx_packets_antenna_id_longitude_experiment_id,priority:1,index:idx_packets_antenna_id_frequency_id,priority:1"`
 	GatewayTime            *time.Time
 	Timestamp              *uint32
 	FineTimestamp          *uint64
@@ -29,15 +30,15 @@ type Packet struct {
 	SignalRssi             *float32 `gorm:"type:numeric(6,2)"`
 	Snr                    float32  `gorm:"type:numeric(5,2)"`
 
-	Latitude         float64  `gorm:"not null;type:numeric(10,6);index:latitude"`
-	Longitude        float64  `gorm:"not null;type:numeric(10,6);index:longitude"`
+	Latitude         float64  `gorm:"not null;type:numeric(10,6);index:idx_packets_antenna_id_latitude_experiment_id,priority:2"`
+	Longitude        float64  `gorm:"not null;type:numeric(10,6);index:idx_packets_antenna_id_longitude_experiment_id,priority:2"`
 	Altitude         float64  `gorm:"type:numeric(6,1)"`
 	AccuracyMeters   *float64 `gorm:"type:numeric(6,2)"`
 	Satellites       *int32
 	Hdop             *float64 `gorm:"type:numeric(4,1)"`
 	AccuracySourceID uint
 
-	ExperimentID *uint
+	ExperimentID *uint `gorm:"index:idx_packets_device_id_time_experiment_id,priority:2,index:idx_packets_antenna_id_latitude_experiment_id,priority:3;index:idx_packets_antenna_id_longitude_experiment_id,priority:3"`
 
 	UserID      uint
 	UserAgentID uint
@@ -46,11 +47,12 @@ type Packet struct {
 }
 
 type Device struct {
-	ID      uint
-	AppId   string `gorm:"UNIQUE_INDEX:app_device"`
-	DevId   string `gorm:"UNIQUE_INDEX:app_device"`
-	DevEui  string // EUI is like a description, and can change
-	Packets []Packet
+	ID        uint
+	NetworkId string `gorm:"index:net_app_dev_eui,unique"`
+	AppId     string `gorm:"index:net_app_dev_eui,unique"`
+	DevId     string `gorm:"index:net_app_dev_eui,unique"`
+	DevEui    string `gorm:"index:net_app_dev_eui,unique"`
+	Packets   []Packet
 }
 
 type Frequency struct {
@@ -61,10 +63,10 @@ type Frequency struct {
 
 type DataRate struct {
 	ID              uint
-	Modulation      string `gorm:"UNIQUE_INDEX:data_rate"` // LORA or FSK or LORA-E
-	Bandwidth       uint64 `gorm:"UNIQUE_INDEX:data_rate"`
-	SpreadingFactor uint8  `gorm:"UNIQUE_INDEX:data_rate"`
-	Bitrate         uint64 `gorm:"UNIQUE_INDEX:data_rate"`
+	Modulation      string `gorm:"index:data_rate,unique"` // LORA or FSK or LORA-E
+	Bandwidth       uint64 `gorm:"index:data_rate,unique"`
+	SpreadingFactor uint8  `gorm:"index:data_rate,unique"`
+	Bitrate         uint64 `gorm:"index:data_rate,unique"`
 	Packets         []Packet
 }
 
@@ -105,9 +107,9 @@ type Antenna struct {
 	ID uint
 
 	// TTN gateway ID along with the Antenna index identifies a unique coverage area.
-	NetworkId    string `gorm:"type:varchar(36);UNIQUE_INDEX:gtw_id_antenna"`
-	GatewayId    string `gorm:"type:varchar(36);UNIQUE_INDEX:gtw_id_antenna"`
-	AntennaIndex uint8  `gorm:"UNIQUE_INDEX:gtw_id_antenna"`
+	NetworkId    string `gorm:"type:text;index:idx_gtw_id_antenna,unique"`
+	GatewayId    string `gorm:"type:text;index:idx_gtw_id_antenna,unique"`
+	AntennaIndex uint8  `gorm:"index:idx_gtw_id_antenna,unique"`
 
 	// For now we do not set antenna locations, but add it here for future use
 	//Latitude         *float64
@@ -120,8 +122,8 @@ type Antenna struct {
 type Gateway struct {
 	ID uint
 
-	NetworkId   string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
-	GatewayId   string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id"`
+	NetworkId   string `gorm:"type:text;UNIQUE_INDEX:idx_gtw_id"`
+	GatewayId   string `gorm:"type:text;UNIQUE_INDEX:idx_gtw_id"`
 	GatewayEui  *string
 	Description *string
 
@@ -134,16 +136,16 @@ type Gateway struct {
 	//AtLocationSince	time.Time // This value gets updated when the gateway moves
 	LastHeard time.Time // This value always gets updated to reflect that the gateway is working
 
-	Antennas         []Antenna
-	GatewayLocations []GatewayLocation
+	//Antennas         []Antenna
+	//GatewayLocations []GatewayLocation
 }
 
 type GatewayLocation struct {
 	ID        uint
-	NetworkId string `gorm:"type:varchar(36);INDEX=idx_gtw_id_install"`
-	GatewayId string `gorm:"type:varchar(36);INDEX=idx_gtw_id_install"`
+	NetworkId string `gorm:"type:text;INDEX:idx_gtw_id_install"`
+	GatewayId string `gorm:"type:text;INDEX:idx_gtw_id_install"`
 
-	InstalledAt time.Time `gorm:"INDEX=idx_gtw_id_install"`
+	InstalledAt time.Time `gorm:"INDEX:idx_gtw_id_install"`
 	Latitude    float64
 	Longitude   float64
 	Altitude    int32
@@ -152,8 +154,8 @@ type GatewayLocation struct {
 // To blacklist a gateway set its location to 0,0
 type GatewayLocationForce struct {
 	ID        uint
-	NetworkId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id_force"`
-	GatewayId string `gorm:"type:varchar(36);UNIQUE_INDEX:idx_gtw_id_force"`
+	NetworkId string `gorm:"type:text;UNIQUE_INDEX:idx_gtw_id"`
+	GatewayId string `gorm:"type:text;UNIQUE_INDEX:idx_gtw_id"`
 
 	Latitude  float64
 	Longitude float64
@@ -167,8 +169,10 @@ type FineTimestampKeyID struct {
 
 // Indexers: These structs are the same as the ones above, but used to index the cache maps
 type DeviceIndexer struct {
-	DevId string
-	AppId string
+	NetworkId string
+	DevId     string
+	AppId     string
+	DevEui    string
 }
 
 type GatewayIndexer struct {
