@@ -28,14 +28,9 @@ var myConfiguration = main.Configuration{
 
 	PrometheusPort: "9100",
 
-	FetchAmqp:    false,
-	FetchNoc:     true,
-	NocUrl:       "http://noc.thethingsnetwork.org:8085/api/v2/gateways",
-	NocBasicAuth: false,
-	NocUsername:  "",
-	NocPassword:  "",
-	FetchWeb:     false,
-	WebUrl:       "https://www.thethingsnetwork.org/gateway-data/",
+	FetchAmqp: false,
+	FetchNoc:  true,
+	FetchWeb:  false,
 
 	StatusFetchInterval: 10,
 }

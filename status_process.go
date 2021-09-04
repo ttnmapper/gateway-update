@@ -74,6 +74,7 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 		gatewayLocationForced = true
 		gateway.Latitude = forcedCoordinates.Latitude
 		gateway.Longitude = forcedCoordinates.Longitude
+		gateway.Altitude = forcedCoordinates.Altitude
 	}
 
 	// Check if the provided coordinates are valid
@@ -234,6 +235,7 @@ func insertNewLocationForGateway(gateway types.TtnMapperGateway, installedAt tim
 		InstalledAt: installedAt,
 		Latitude:    gateway.Latitude,
 		Longitude:   gateway.Longitude,
+		Altitude:    gateway.Altitude,
 	}
 	db.Create(&newLocation)
 }

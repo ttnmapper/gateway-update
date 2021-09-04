@@ -146,6 +146,7 @@ type GatewayLocation struct {
 	InstalledAt time.Time `gorm:"INDEX=idx_gtw_id_install"`
 	Latitude    float64
 	Longitude   float64
+	Altitude    int32
 }
 
 // To blacklist a gateway set its location to 0,0
@@ -156,6 +157,7 @@ type GatewayLocationForce struct {
 
 	Latitude  float64
 	Longitude float64
+	Altitude  int32
 }
 
 type FineTimestampKeyID struct {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"sync"
+	"ttnmapper-gateway-update/types"
 	"ttnmapper-gateway-update/utils"
 )
 
@@ -136,11 +137,11 @@ func main() {
 
 	//// Create tables if they do not exist
 	//log.Println("Performing auto migrate")
-	//db.AutoMigrate(
-	//	&types.Gateway{},
-	//	&types.GatewayLocation{},
-	//	&types.GatewayLocationForce{},
-	//)
+	db.AutoMigrate(
+		&types.Gateway{},
+		&types.GatewayLocation{},
+		&types.GatewayLocationForce{},
+	)
 
 	// Start amqp listener on this thread - blocking function
 	if myConfiguration.FetchAmqp {
