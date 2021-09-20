@@ -38,6 +38,11 @@ func processRawPackets() {
 				gateway.Altitude = 0
 			}
 
+			// Ignore packet broker
+			if gateway.GatewayId == "packetbroker" {
+				continue
+			}
+
 			UpdateGateway(gateway)
 		}
 	}
