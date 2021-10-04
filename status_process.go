@@ -124,6 +124,23 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 		}
 	}
 
+	// Cache and gateway table should reflect last location
+	if !gatewayLocationForced {
+		if gateway.Latitude == 0 && gateway.Longitude == 0 {
+			// Previous location was valid, do not update to invalid
+		} else {
+			// Update to latest unless latest is invalid
+			gatewayDb.Latitude = gateway.Latitude
+			gatewayDb.Longitude = gateway.Longitude
+			gatewayDb.Altitude = gateway.Altitude
+		}
+	} else {
+		// Forced, so always update
+		gatewayDb.Latitude = gateway.Latitude
+		gatewayDb.Longitude = gateway.Longitude
+		gatewayDb.Altitude = gateway.Altitude
+	}
+
 	// Update gateway in db with fields that are set
 	gatewayDb.LastHeard = lastHeard
 	if gateway.GatewayEui != "" {
@@ -132,10 +149,6 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 	if gateway.Description != "" {
 		gatewayDb.Description = &gateway.Description
 	}
-
-	gatewayDb.Latitude = gateway.Latitude
-	gatewayDb.Longitude = gateway.Longitude
-	gatewayDb.Altitude = gateway.Altitude
 
 	if gateway.LocationAccuracy != 0 {
 		gatewayDb.LocationAccuracy = &gateway.LocationAccuracy
