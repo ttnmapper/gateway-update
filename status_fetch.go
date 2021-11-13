@@ -200,7 +200,7 @@ func fetchHeliumStatuses() {
 
 	cursor := ""
 	for {
-		response, err := helium.FetchStatuses("")
+		response, err := helium.FetchStatuses(cursor)
 		if err != nil {
 			log.Println(err.Error())
 			break

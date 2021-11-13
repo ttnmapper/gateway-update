@@ -11,21 +11,21 @@ import (
 func TestFetchStatuses(t *testing.T) {
 	cursor := ""
 	for {
-		response, err := FetchStatuses("")
+		response, err := FetchStatuses(cursor)
 		if err != nil {
 			t.Fatalf(err.Error())
 		}
 
 		log.Printf("Found %d hotspots", len(response.Data))
 
-		for _, hotspot := range response.Data {
-			//log.Println(utils.PrettyPrint(hotspot))
-			ttnMapperGw, err := HeliumHotspotToTtnMapperGateway(hotspot)
-			if err != nil {
-				t.Fatalf(err.Error())
-			}
-			log.Println(utils.PrettyPrint(ttnMapperGw))
-		}
+		//for _, hotspot := range response.Data {
+		//	//log.Println(utils.PrettyPrint(hotspot))
+		//	ttnMapperGw, err := HeliumHotspotToTtnMapperGateway(hotspot)
+		//	if err != nil {
+		//		t.Fatalf(err.Error())
+		//	}
+		//	log.Println(utils.PrettyPrint(ttnMapperGw))
+		//}
 
 		cursor = response.Cursor
 		if cursor == "" {
