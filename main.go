@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/prometheus/client_golang/prometheus"
@@ -100,6 +101,9 @@ var (
 )
 
 func main() {
+	reprocess := flag.Bool("reprocess", false, "Reprocess by fetching gateway statuses from specific endpoints")
+	flag.Parse()
+	reprocess_apis := flag.Args()
 
 	err := gonfig.GetConf("conf.json", &myConfiguration)
 	if err != nil {
@@ -143,16 +147,29 @@ func main() {
 		&types.GatewayLocationForce{},
 	)
 
-	// Start amqp listener on this thread - blocking function
-	if myConfiguration.FetchAmqp {
-		log.Println("Starting AMQP thread")
-		subscribeToRabbitRaw()
+	if *reprocess {
+		for _, service := range reprocess_apis {
+			if service == "packetbroker" {
+				log.Println("Fetching Packet Broker gateway statuses")
+				fetchPacketBrokerStatuses()
+			}
+			if service == "helium" {
+				log.Println("Fetching Helium hotspot statuses")
+				fetchHeliumStatuses()
+			}
+		}
+	} else {
+		// Start amqp listener on this thread - blocking function
+		if myConfiguration.FetchAmqp {
+			log.Println("Starting AMQP thread")
+			subscribeToRabbitRaw()
+		}
+
+		// Periodic status fetchers
+		startPeriodicFetchers()
+
+		log.Printf("Init Complete")
+		forever := make(chan bool)
+		<-forever
 	}
-
-	// Periodic status fetchers
-	startPeriodicFetchers()
-
-	log.Printf("Init Complete")
-	forever := make(chan bool)
-	<-forever
 }

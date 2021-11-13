@@ -49,3 +49,8 @@ func TestFetchPacketBrokerStatuses(t *testing.T) {
 	initTests()
 	fetchPacketBrokerStatuses()
 }
+
+func TestFetchHeliumStatuses(t *testing.T) {
+	initTests()
+	fetchHeliumStatuses()
+}

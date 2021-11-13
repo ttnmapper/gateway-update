@@ -4,6 +4,7 @@ import (
 	"github.com/streadway/amqp"
 	"log"
 	"time"
+	"ttnmapper-gateway-update/helium"
 	"ttnmapper-gateway-update/noc"
 	"ttnmapper-gateway-update/packet_broker"
 	"ttnmapper-gateway-update/utils"
@@ -183,6 +184,46 @@ func fetchPacketBrokerStatuses() {
 				log.Print("PB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 				UpdateGateway(ttnMapperGateway)
 			}
+		}
+	}
+
+	busyFetchingPacketBroker = false
+}
+
+var busyFetchingHelium = false
+
+func fetchHeliumStatuses() {
+	if busyFetchingHelium {
+		return
+	}
+	busyFetchingHelium = true
+
+	cursor := ""
+	for {
+		response, err := helium.FetchStatuses("")
+		if err != nil {
+			log.Println(err.Error())
+			break
+		}
+
+		log.Printf("HELIUM %d hotspots\n", len(response.Data))
+
+		for _, hotspot := range response.Data {
+			ttnMapperGateway, err := helium.HeliumHotspotToTtnMapperGateway(hotspot)
+			if err == nil {
+				log.Print("HELIUM ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
+				UpdateGateway(ttnMapperGateway)
+			}
+		}
+
+		cursor = response.Cursor
+		if cursor == "" {
+			log.Println("Cursor empty")
+			break
+		}
+		if len(response.Data) == 0 {
+			log.Println("No hotspots in response")
+			break
 		}
 	}
 
