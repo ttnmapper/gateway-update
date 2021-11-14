@@ -211,7 +211,7 @@ func fetchHeliumStatuses() {
 		for _, hotspot := range response.Data {
 			ttnMapperGateway, err := helium.HeliumHotspotToTtnMapperGateway(hotspot)
 			if err == nil {
-				log.Print("HELIUM ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
+				//log.Print("HELIUM ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 				UpdateGateway(ttnMapperGateway)
 			}
 		}
