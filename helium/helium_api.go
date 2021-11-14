@@ -2,6 +2,7 @@ package helium
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -37,16 +38,18 @@ func FetchStatuses(cursor string) (HotspotApiResponse, error) {
 	// debug print body
 	//log.Println(utils.PrettyPrint(res.Header))
 	//
-	//buf, bodyErr := ioutil.ReadAll(res.Body)
-	//if bodyErr != nil {
-	//	log.Print("bodyErr ", bodyErr.Error())
-	//}
+	buf, bodyErr := ioutil.ReadAll(res.Body)
+	if bodyErr != nil {
+		log.Print("bodyErr ", bodyErr.Error())
+	}
 	//log.Printf("%s", buf)
 	//return hotspots, nil
 	// end debug print body
 
-	err = json.NewDecoder(res.Body).Decode(&apiResponse)
+	//err = json.NewDecoder(res.Body).Decode(&apiResponse)
+	err = json.Unmarshal(buf, &apiResponse)
 	if err != nil {
+		log.Printf("%s", buf)
 		return apiResponse, err
 	}
 
