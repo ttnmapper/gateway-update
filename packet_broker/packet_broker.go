@@ -48,9 +48,9 @@ func FetchStatuses(page int) ([]Openapi.Gateway, error) {
 	if listGatewaysResponse.JSON200 != nil {
 		gateways = append(gateways, *listGatewaysResponse.JSON200...)
 		if len(*listGatewaysResponse.JSON200) == 0 {
+			log.Printf("%s", listGatewaysResponse.Body)
 			return gateways, errors.New("response empty")
 		} else {
-			log.Printf("%s", listGatewaysResponse.Body)
 			return gateways, nil
 		}
 	} else {
