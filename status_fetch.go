@@ -185,17 +185,23 @@ func fetchPacketBrokerStatuses() {
 	}
 	busyFetchingPacketBroker = true
 
-	gateways, err := packet_broker.FetchStatuses()
-	if err != nil {
-		log.Println(err.Error())
-	} else {
-		for _, gateway := range gateways {
-			ttnMapperGateway, err := packet_broker.PbGatewayToTtnMapperGateway(gateway)
-			if err == nil {
-				log.Print("PB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
-				UpdateGateway(ttnMapperGateway)
+	page := 0
+	for {
+
+		gateways, err := packet_broker.FetchStatuses(page)
+		if err != nil {
+			log.Println(err.Error())
+			break
+		} else {
+			for _, gateway := range gateways {
+				ttnMapperGateway, err := packet_broker.PbGatewayToTtnMapperGateway(gateway)
+				if err == nil {
+					log.Print("PB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
+					UpdateGateway(ttnMapperGateway)
+				}
 			}
 		}
+		page++
 	}
 
 	busyFetchingPacketBroker = false

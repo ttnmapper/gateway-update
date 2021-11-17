@@ -3,6 +3,7 @@ package packet_broker
 import (
 	"context"
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -10,7 +11,7 @@ import (
 	"ttnmapper-gateway-update/types"
 )
 
-func FetchStatuses() ([]Openapi.Gateway, error) {
+func FetchStatuses(page int) ([]Openapi.Gateway, error) {
 	var gateways []Openapi.Gateway
 
 	client, err := Openapi.NewClientWithResponses("https://mapper.packetbroker.net/api/v2")
@@ -18,8 +19,8 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 		return gateways, err
 	}
 
-	offset := 0
 	limit := 1000
+	offset := page * limit
 	online := true // online only to make responses smaller
 	params := Openapi.ListGatewaysParams{
 		DistanceWithin: nil,
@@ -40,25 +41,22 @@ func FetchStatuses() ([]Openapi.Gateway, error) {
 	//	Longitude float32
 	//}{Point: Openapi.Point{Latitude: 22.7, Longitude: 114.234}, Distance: 7500, Latitude: 22.7, Longitude: 114.234})
 
-	for {
-		listGatewaysResponse, err := client.ListGatewaysWithResponse(context.Background(), &params)
-		if err != nil {
-			return gateways, err
-		}
-		if listGatewaysResponse.JSON200 != nil {
-			gateways = append(gateways, *listGatewaysResponse.JSON200...)
-			if len(*listGatewaysResponse.JSON200) == 0 {
-				break
-			}
-		} else {
-			break
-		}
-
-		// Move offset for next call
-		offset += limit
+	listGatewaysResponse, err := client.ListGatewaysWithResponse(context.Background(), &params)
+	if err != nil {
+		return gateways, err
 	}
-
-	return gateways, nil
+	if listGatewaysResponse.JSON200 != nil {
+		gateways = append(gateways, *listGatewaysResponse.JSON200...)
+		if len(*listGatewaysResponse.JSON200) == 0 {
+			return gateways, errors.New("response empty")
+		} else {
+			log.Printf("%s", listGatewaysResponse.Body)
+			return gateways, nil
+		}
+	} else {
+		log.Printf("%s", listGatewaysResponse.Body)
+		return gateways, errors.New("response nil")
+	}
 }
 
 func PbGatewayToTtnMapperGateway(gatewayIn Openapi.Gateway) (types.TtnMapperGateway, error) {
