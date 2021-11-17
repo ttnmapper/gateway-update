@@ -35,12 +35,17 @@ type Configuration struct {
 
 	PrometheusPort string `env:"PROMETHEUS_PORT"`
 
-	FetchAmqp         bool `env:"FETCH_AMQP"` // Should we subscribe to the amqp queue to process live data
-	FetchNoc          bool `env:"FETCH_NOC"`  // Should we periodically fetch gateway statuses from the NOC (TTNv2)
-	FetchWeb          bool `env:"FETCH_WEB"`  // Should we periodically fetch gateway statuses from the TTN website (TTNv2 and v3)
-	FetchPacketBroker bool `env:"FETCH_PACKET_BROKER"`
+	FetchAmqp bool `env:"FETCH_AMQP"` // Should we subscribe to the amqp queue to process live data
+	//FetchNoc          bool `env:"FETCH_NOC"`  // Should we periodically fetch gateway statuses from the NOC (TTNv2)
 
-	StatusFetchInterval int `env:"FETCH_INTERVAL"` // How often in seconds should we fetch gateway statuses from the NOC and the TTN Website
+	FetchWeb         bool `env:"FETCH_WEB"`          // Should we periodically fetch gateway statuses from the TTN website (TTNv2 and v3)
+	FetchWebInterval int  `env:"FETCH_WEB_INTERVAL"` // How often in seconds should we fetch gateway statuses from the TTN Website
+
+	FetchPacketBroker         bool `env:"FETCH_PACKET_BROKER"`
+	FetchPacketBrokerInterval int  `env:"FETCH_PACKET_BROKER_INTERVAL"`
+
+	FetchHelium         bool `env:"FETCH_HELIUM"`
+	FetchHeliumInterval int  `env:"FETCH_HELIUM_INTERVAL"`
 }
 
 var myConfiguration = Configuration{
@@ -61,12 +66,14 @@ var myConfiguration = Configuration{
 
 	PrometheusPort: "9100",
 
-	FetchAmqp:         false,
-	FetchNoc:          false,
-	FetchWeb:          false,
-	FetchPacketBroker: false,
-
-	StatusFetchInterval: 3600, // seconds
+	FetchAmqp: false,
+	//FetchNoc:          false,
+	FetchWeb:                  false,
+	FetchWebInterval:          3600,
+	FetchPacketBroker:         false,
+	FetchPacketBrokerInterval: 3600,
+	FetchHelium:               false,
+	FetchHeliumInterval:       86400,
 }
 
 var (
@@ -103,7 +110,7 @@ var (
 func main() {
 	reprocess := flag.Bool("reprocess", false, "Reprocess by fetching gateway statuses from specific endpoints")
 	flag.Parse()
-	reprocess_apis := flag.Args()
+	reprocessApis := flag.Args()
 
 	err := gonfig.GetConf("conf.json", &myConfiguration)
 	if err != nil {
@@ -148,7 +155,11 @@ func main() {
 	)
 
 	if *reprocess {
-		for _, service := range reprocess_apis {
+		for _, service := range reprocessApis {
+			if service == "web" {
+				log.Println("Fetching web gateway statuses")
+				fetchPacketBrokerStatuses()
+			}
 			if service == "packetbroker" {
 				log.Println("Fetching Packet Broker gateway statuses")
 				fetchPacketBrokerStatuses()

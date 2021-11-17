@@ -98,17 +98,18 @@ func subscribeToRabbitRaw() {
 }
 
 func startPeriodicFetchers() {
-	nocTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
-	webTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
-	pbTicker := time.NewTicker(time.Duration(myConfiguration.StatusFetchInterval) * time.Second)
+	//nocTicker := time.NewTicker(time.Duration(myConfiguration.FetchNocInterval) * time.Second)
+	webTicker := time.NewTicker(time.Duration(myConfiguration.FetchWebInterval) * time.Second)
+	pbTicker := time.NewTicker(time.Duration(myConfiguration.FetchPacketBrokerInterval) * time.Second)
+	heliumTicker := time.NewTicker(time.Duration(myConfiguration.FetchHeliumInterval) * time.Second)
 
 	go func() {
 		for {
 			select {
-			case <-nocTicker.C:
-				if myConfiguration.FetchNoc {
-					go fetchNocStatuses()
-				}
+			//case <-nocTicker.C:
+			//	if myConfiguration.FetchNoc {
+			//		go fetchNocStatuses()
+			//	}
 			case <-webTicker.C:
 				if myConfiguration.FetchWeb {
 					go fetchWebStatuses()
@@ -116,6 +117,10 @@ func startPeriodicFetchers() {
 			case <-pbTicker.C:
 				if myConfiguration.FetchPacketBroker {
 					go fetchPacketBrokerStatuses()
+				}
+			case <-heliumTicker.C:
+				if myConfiguration.FetchHelium {
+					go fetchHeliumStatuses()
 				}
 			}
 		}
@@ -166,6 +171,12 @@ func fetchWebStatuses() {
 	busyFetchingWeb = false
 }
 
+/*
+Fetching on 2021-11-17 took
+real    1m19.261s
+user    0m2.176s
+sys     0m2.016s
+*/
 var busyFetchingPacketBroker = false
 
 func fetchPacketBrokerStatuses() {
@@ -190,6 +201,12 @@ func fetchPacketBrokerStatuses() {
 	busyFetchingPacketBroker = false
 }
 
+/*
+Fetching Helium on 2021-11-17 took
+real    306m29.503s
+user    1m47.352s
+sys     3m13.356s
+*/
 var busyFetchingHelium = false
 
 func fetchHeliumStatuses() {
