@@ -157,25 +157,28 @@ func fetchWebStatuses() {
 	}
 	busyFetchingWeb = true
 
+	gatewayCount := 0
 	gateways, err := web.FetchWebStatuses()
 	if err != nil {
 		log.Println(err.Error())
 	} else {
 		for _, gateway := range gateways {
+			gatewayCount++
 			ttnMapperGateway := web.WebGatewayToTtnMapperGateway(*gateway)
 			log.Print("WEB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
 			UpdateGateway(ttnMapperGateway)
 		}
 	}
 
+	log.Printf("Fetched %d gateways from Packet Broker", gatewayCount)
 	busyFetchingWeb = false
 }
 
 /*
 Fetching on 2021-11-17 took
-real    1m19.261s
-user    0m2.176s
-sys     0m2.016s
+real	4m5.426s
+user	0m3.360s
+sys	0m4.620s
 */
 var busyFetchingPacketBroker = false
 
@@ -185,6 +188,7 @@ func fetchPacketBrokerStatuses() {
 	}
 	busyFetchingPacketBroker = true
 
+	gatewayCount := 0
 	page := 0
 	for {
 
@@ -194,6 +198,7 @@ func fetchPacketBrokerStatuses() {
 			break
 		} else {
 			for _, gateway := range gateways {
+				gatewayCount++
 				ttnMapperGateway, err := packet_broker.PbGatewayToTtnMapperGateway(gateway)
 				if err == nil {
 					log.Print("PB ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
@@ -204,6 +209,7 @@ func fetchPacketBrokerStatuses() {
 		page++
 	}
 
+	log.Printf("Fetched %d gateways from Packet Broker", gatewayCount)
 	busyFetchingPacketBroker = false
 }
 
@@ -221,6 +227,7 @@ func fetchHeliumStatuses() {
 	}
 	busyFetchingHelium = true
 
+	hotspotCount := 0
 	cursor := ""
 	for {
 		response, err := helium.FetchStatuses(cursor)
@@ -232,6 +239,7 @@ func fetchHeliumStatuses() {
 		log.Printf("HELIUM %d hotspots\n", len(response.Data))
 
 		for _, hotspot := range response.Data {
+			hotspotCount++
 			ttnMapperGateway, err := helium.HeliumHotspotToTtnMapperGateway(hotspot)
 			if err == nil {
 				//log.Print("HELIUM ", "", "\t", ttnMapperGateway.GatewayId+"\t", ttnMapperGateway.Time)
@@ -250,5 +258,6 @@ func fetchHeliumStatuses() {
 		}
 	}
 
+	log.Printf("Fetched %d hotspots from Helium", hotspotCount)
 	busyFetchingPacketBroker = false
 }
