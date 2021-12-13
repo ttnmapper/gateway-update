@@ -158,7 +158,7 @@ func main() {
 		for _, service := range reprocessApis {
 			if service == "web" {
 				log.Println("Fetching web gateway statuses")
-				fetchPacketBrokerStatuses()
+				fetchWebStatuses()
 			}
 			if service == "packetbroker" {
 				log.Println("Fetching Packet Broker gateway statuses")
