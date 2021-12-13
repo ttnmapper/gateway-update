@@ -170,7 +170,7 @@ func fetchWebStatuses() {
 		}
 	}
 
-	log.Printf("Fetched %d gateways from Packet Broker", gatewayCount)
+	log.Printf("Fetched %d gateways from TTN website", gatewayCount)
 	busyFetchingWeb = false
 }
 
