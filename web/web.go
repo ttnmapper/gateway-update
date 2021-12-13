@@ -45,12 +45,23 @@ func WebGatewayToTtnMapperGateway(gatewayIn types.WebGateway) types.TtnMapperGat
 	gatewayOut := types.TtnMapperGateway{}
 
 	// Website lists only TTN gateways
-	gatewayOut.NetworkId = "thethingsnetwork.org"
+	if gatewayIn.Network == "ttnv2" {
+		gatewayOut.NetworkId = "thethingsnetwork.org"
+	} else if gatewayIn.Network == "ttn" {
+		gatewayOut.NetworkId = "NS_TTS_V3://ttn@000013"
+	} else {
+		log.Println("Unknown network " + gatewayIn.Network)
+	}
 
 	gatewayOut.GatewayId = gatewayIn.ID
 
+	// V2 has LastSeen, V3 has Online
 	if gatewayIn.LastSeen != nil {
 		gatewayOut.Time = gatewayIn.LastSeen.UnixNano()
+	} else {
+		if gatewayIn.Online == true {
+			gatewayOut.Time = time.Now().UnixNano()
+		}
 	}
 
 	// eui-c0ee40ffff29618d
@@ -71,7 +82,12 @@ func WebGatewayToTtnMapperGateway(gatewayIn types.WebGateway) types.TtnMapperGat
 	gatewayOut.Longitude = gatewayIn.Location.Longitude
 	gatewayOut.Altitude = int32(gatewayIn.Location.Altitude)
 
-	gatewayOut.Description = gatewayIn.Description
+	// V3 has name and description, V2 has description
+	if gatewayIn.Name != "" {
+		gatewayOut.Description = gatewayIn.Name
+	} else {
+		gatewayOut.Description = gatewayIn.Description
+	}
 
 	return gatewayOut
 }
