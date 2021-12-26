@@ -12,6 +12,7 @@ import (
 )
 
 func FetchStatuses(page int) ([]Openapi.Gateway, error) {
+	log.Println("Fetching PacketBroker statuses")
 	var gateways []Openapi.Gateway
 
 	client, err := Openapi.NewClientWithResponses("https://mapper.packetbroker.net/api/v2")
