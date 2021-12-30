@@ -259,5 +259,5 @@ func fetchHeliumStatuses() {
 	}
 
 	log.Printf("Fetched %d hotspots from Helium", hotspotCount)
-	busyFetchingPacketBroker = false
+	busyFetchingHelium = false
 }
