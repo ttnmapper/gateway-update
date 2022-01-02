@@ -30,14 +30,6 @@ func processRawPackets() {
 			// We use the "last heard" on the network
 			gateway.Time = message.Time
 
-			// Ignore locations obtained from live data in TTNv2, as it takes 6 hours to update, or is often not set.
-			// TODO: we can have an oscillating behaviour between location from metadata and location from other sources. Is this only a V2 issue?
-			if message.NetworkType == types.NS_TTN_V2 {
-				gateway.Latitude = 0
-				gateway.Longitude = 0
-				gateway.Altitude = 0
-			}
-
 			// Ignore packet broker
 			if gateway.GatewayId == "packetbroker" {
 				continue
@@ -132,6 +124,10 @@ func UpdateGateway(gateway types.TtnMapperGateway) {
 			// Update to latest unless latest is invalid
 			gatewayDb.Latitude = gateway.Latitude
 			gatewayDb.Longitude = gateway.Longitude
+		}
+		if gateway.Altitude == 0 {
+			// Use previous altitude
+		} else {
 			gatewayDb.Altitude = gateway.Altitude
 		}
 	} else {
